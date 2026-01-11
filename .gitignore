@@ -1,0 +1,102 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+# .env.example files should be committed (templates)
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Cursor
+.cursor/
+
+# Documentation (as requested)
+docs/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma
+*.db
+*.db-journal
+# schema.prisma should be committed
+!**/prisma/schema.prisma
+
+# Docker
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Misc
+*.pem
+*.key
+*.cert
+*.crt
