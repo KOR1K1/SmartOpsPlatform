@@ -6,8 +6,16 @@ import { ValidationPipe } from "@nestjs/common";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // CORS configuration
+  // Allow requests from both localhost (browser) and container network (internal)
+  const allowedOrigins = [
+    env.frontendUrl, // Container network URL (http://web:3000)
+    "http://localhost:3000", // Browser URL
+    "http://127.0.0.1:3000", // Alternative localhost
+  ];
+
   app.enableCors({
-    origin: env.frontendUrl,
+    origin: allowedOrigins,
     credentials: true,
   });
 

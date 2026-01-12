@@ -1,15 +1,27 @@
+import { Card, CardHeader } from "@/components/ui/card";
+
 export default function KnowledgeLoading() {
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
-        <div className="mt-2 h-4 w-96 animate-pulse rounded bg-muted" />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-48 animate-pulse rounded-lg bg-muted" />
+    <main className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8" role="main" aria-label="Knowledge Hub">
+      <header className="mb-8">
+        <div className="h-9 w-64 animate-pulse rounded bg-muted mb-2" />
+        <div className="h-5 w-96 animate-pulse rounded bg-muted" />
+      </header>
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="h-5 w-24 animate-pulse rounded bg-muted mb-2" />
+                  <div className="h-6 w-full animate-pulse rounded bg-muted" />
+                </div>
+                <div className="h-4 w-24 animate-pulse rounded bg-muted ml-4" />
+              </div>
+            </CardHeader>
+          </Card>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

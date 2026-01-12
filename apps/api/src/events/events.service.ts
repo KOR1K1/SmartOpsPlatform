@@ -5,9 +5,56 @@ import { PrismaService } from "../prisma/prisma.service";
 export class EventsService {
   constructor(private prisma: PrismaService) {}
 
-  async getTaskEvents(limit = 50, offset = 0) {
+  async getTaskEvents(limit = 50, offset = 0, q?: string, type?: string) {
+    const filters: any = { deletedAt: null };
+
+    if (type) {
+      filters.type = type;
+    }
+
+    if (q) {
+      const query = q.trim();
+      const numericMatch = query.match(/\d+/);
+      const numericId = numericMatch ? parseInt(numericMatch[0], 10) : null;
+
+      filters.OR = [
+        {
+          message: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+        {
+          type: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+        {
+          task: {
+            title: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          user: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+      ];
+
+      if (numericId !== null && !Number.isNaN(numericId)) {
+        filters.OR.push({ id: numericId });
+      }
+    }
+
     return this.prisma.taskEvent.findMany({
-      where: { deletedAt: null },
+      where: filters,
       include: {
         task: {
           select: {

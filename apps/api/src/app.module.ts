@@ -7,6 +7,7 @@ import { UsersModule } from "./users/users.module";
 import { EventsModule } from "./events/events.module";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { KnowledgeModule } from "./knowledge/knowledge.module";
+import { TasksModule } from "./tasks/tasks.module";
 import { WebSocketModule } from "./websocket/websocket.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
@@ -19,6 +20,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
     EventsModule,
     AnalyticsModule,
     KnowledgeModule,
+    TasksModule,
     WebSocketModule,
     ThrottlerModule.forRoot([
       {

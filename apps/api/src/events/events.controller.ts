@@ -17,9 +17,11 @@ export class EventsController {
   @Get("tasks")
   getTaskEvents(
     @Query("limit", new DefaultValuePipe(50), ParseIntPipe) limit: number,
-    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset: number
+    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset: number,
+    @Query("q") q?: string,
+    @Query("type") type?: string
   ) {
-    return this.eventsService.getTaskEvents(limit, offset);
+    return this.eventsService.getTaskEvents(limit, offset, q, type);
   }
 
   @Get("system")

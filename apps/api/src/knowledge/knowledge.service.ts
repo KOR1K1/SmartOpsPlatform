@@ -20,12 +20,53 @@ export class KnowledgeService {
     });
   }
 
-  async getDocuments(categoryId?: number, limit = 50, offset = 0) {
+  async getDocuments(categoryId?: number, limit = 50, offset = 0, q?: string) {
+    const filters: any = {
+      deletedAt: null,
+      ...(categoryId && { categoryId }),
+    };
+
+    if (q) {
+      const query = q.trim();
+      const numericMatch = query.match(/\d+/);
+      const numericId = numericMatch ? parseInt(numericMatch[0], 10) : null;
+
+      filters.OR = [
+        {
+          title: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+        {
+          content: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+        {
+          category: {
+            title: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          slug: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+      ];
+
+      if (numericId !== null && !Number.isNaN(numericId)) {
+        filters.OR.push({ id: numericId });
+      }
+    }
+
     return this.prisma.knowledgeDocument.findMany({
-      where: {
-        deletedAt: null,
-        ...(categoryId && { categoryId }),
-      },
+      where: filters,
       include: {
         category: {
           select: {

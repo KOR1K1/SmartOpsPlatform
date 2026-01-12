@@ -1,7 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User, Task, TaskEvent, KnowledgeCategory } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import * as pg from "pg";
 import * as bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL!;
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("🌱 Starting seed...");
@@ -33,7 +38,7 @@ async function main() {
   // Create 100+ users
   console.log("Creating users...");
   const hashedPassword = await bcrypt.hash("password123", 10);
-  const users = [];
+  const users: User[] = [];
 
   for (let i = 1; i <= 100; i++) {
     const roleId =
@@ -58,7 +63,7 @@ async function main() {
 
   // Create 5k tasks
   console.log("Creating tasks...");
-  const tasks = [];
+  const tasks: Task[] = [];
   const statuses = ["new", "in_progress", "done", "cancelled"];
 
   for (let i = 1; i <= 5000; i++) {
@@ -108,7 +113,7 @@ async function main() {
 
   // Create knowledge categories and documents
   console.log("Creating knowledge base...");
-  const categories = [];
+  const categories: KnowledgeCategory[] = [];
   const categoryTitles = [
     "Getting Started",
     "API Documentation",
@@ -185,8 +190,8 @@ async function main() {
           source: "seed_script",
           index: i,
         },
-      });
-    }
+      },
+    });
   }
 
   console.log("✅ Created 100 system events");
@@ -209,4 +214,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

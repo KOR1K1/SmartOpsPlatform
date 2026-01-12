@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
+  ParseBoolPipe,
 } from "@nestjs/common";
 import { KnowledgeService } from "./knowledge.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -22,12 +23,13 @@ export class KnowledgeController {
 
   @Get("documents")
   getDocuments(
-    @Query("categoryId", new DefaultValuePipe(undefined), ParseIntPipe)
-    categoryId?: number,
+    @Query("categoryId", new DefaultValuePipe(undefined)) categoryId?: string,
     @Query("limit", new DefaultValuePipe(50), ParseIntPipe) limit?: number,
-    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset?: number
+    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset?: number,
+    @Query("q") q?: string
   ) {
-    return this.knowledgeService.getDocuments(categoryId, limit, offset);
+    const parsedCategoryId = categoryId ? parseInt(categoryId, 10) : undefined;
+    return this.knowledgeService.getDocuments(parsedCategoryId, limit, offset, q);
   }
 
   @Get("documents/:id")

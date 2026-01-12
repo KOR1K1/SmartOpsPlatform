@@ -15,8 +15,8 @@ function getEnv(key: string, defaultValue?: string): string {
 }
 
 export const env = {
-  // API URL (public - exposed to browser)
-  apiUrl: getEnv("NEXT_PUBLIC_API_URL", "http://localhost:4000"),
+  // API URL - use internal Docker service name for Server Components, public URL for Client Components
+  apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
 
   // App URL (public - for metadata, sitemap, etc.)
   appUrl: getEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),

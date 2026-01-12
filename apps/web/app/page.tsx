@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+// Route segment config for performance optimization
+export const dynamic = "force-static"; // Force static generation for home page
+
 export const metadata: Metadata = {
   title: "Home",
   description: "SmartOps Platform - Operational analytics and knowledge management",

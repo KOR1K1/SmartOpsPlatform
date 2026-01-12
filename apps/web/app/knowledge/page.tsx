@@ -1,23 +1,38 @@
 import type { Metadata } from "next";
+import { fetchKnowledgeCategories } from "@/lib/api";
+import { KnowledgeClient } from "./knowledge-client";
 
 export const metadata: Metadata = {
   title: "Knowledge Hub",
-  description: "Browse and search knowledge documents",
+  description: "Access and manage your knowledge base documents",
 };
 
-export default function KnowledgePage() {
-  return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight">Knowledge Hub</h2>
-        <p className="text-muted-foreground">
-          Access and manage your knowledge base documents
-        </p>
-      </div>
-      {/* Knowledge hub components will be implemented later */}
-      <div className="rounded-lg border bg-card p-6">
-        <p className="text-sm text-muted-foreground">Knowledge documents will be displayed here</p>
-      </div>
-    </div>
-  );
+// Force dynamic rendering to ensure cookies are available
+export const dynamic = "force-dynamic";
+
+/**
+ * Knowledge Page - Server Component
+ * Fetches categories on the server and passes them to Client Component
+ */
+type Category = {
+  id: number;
+  title: string;
+  slug: string;
+};
+
+export default async function KnowledgePage() {
+  // Fetch categories on the server using fetchApi (handles auth automatically)
+  let categories: Category[];
+  try {
+    categories = await fetchKnowledgeCategories();
+  } catch (error) {
+    // If error indicates session expired, re-throw to trigger error boundary
+    if (error instanceof Error && error.message.includes("Session expired")) {
+      throw error;
+    }
+    // For other errors, use empty array
+    categories = [];
+  }
+
+  return <KnowledgeClient initialCategories={categories} />;
 }

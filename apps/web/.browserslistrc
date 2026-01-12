@@ -1,0 +1,11 @@
+# Modern browsers only - aggressive optimization for mobile performance
+# Targeting modern browsers reduces polyfills and improves performance
+# This configuration targets browsers that support ES2022+ features natively
+# More aggressive targeting reduces Legacy JavaScript polyfills
+Chrome >= 100
+Firefox >= 100
+Safari >= 15.4
+Edge >= 100
+not dead
+not IE 11
+not op_mini all
