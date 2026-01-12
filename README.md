@@ -1,5 +1,7 @@
 <div align="center">
 
+https://github.com/user-attachments/assets/0c66003b-9b89-4692-9738-eed591458495
+
 # 🚀 SmartOps Platform
 
 **Enterprise-grade full-stack platform for operational analytics, event management, and knowledge management**
