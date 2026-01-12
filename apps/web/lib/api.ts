@@ -224,6 +224,10 @@ export async function fetchAnalytics() {
  * @param limit - Number of events to fetch (default: 20)
  * @param offset - Number of events to skip (default: 0)
  */
+/**
+ * Fetch events - Server Component version
+ * Use fetchEventsClient for Client Components
+ */
 export async function fetchEvents(
   limit = 20,
   offset = 0,
@@ -269,6 +273,71 @@ export async function fetchEvents(
   } catch (error) {
     // Return empty array if API is unavailable
     // Errors are handled gracefully by Next.js during build
+    return [];
+  }
+}
+
+/**
+ * Client-side version of fetchEvents
+ * For use in Client Components ("use client")
+ * Uses Next.js API route as proxy to access httpOnly cookies securely
+ */
+export async function fetchEventsClient(
+  limit = 20,
+  offset = 0,
+  search?: string,
+  type?: string
+): Promise<Array<{
+  id: number;
+  type: string;
+  message: string;
+  createdAt: string;
+  task?: {
+    id: number;
+    title: string;
+    status: string;
+  };
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}>> {
+  try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+
+    if (search) {
+      params.append("q", search);
+    }
+
+    if (type) {
+      params.append("type", type);
+    }
+
+    // Use Next.js API route as proxy (handles httpOnly cookies)
+    const response = await fetch(`/api/events?${params.toString()}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Unauthorized - redirect to login
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        return [];
+      }
+      throw new Error(`Failed to fetch events: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error fetching events:", error);
     return [];
   }
 }

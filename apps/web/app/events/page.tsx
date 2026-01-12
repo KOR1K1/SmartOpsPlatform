@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { fetchEvents } from "@/lib/api";
+import { fetchEventsClient } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventsSearch } from "@/components/events/events-search";
@@ -48,7 +48,7 @@ export default function EventsPage() {
         const limit = searchQuery 
           ? (isNumericSearch ? 500 : 200) // Search more for numeric queries
           : (selectedType ? 100 : ITEMS_PER_PAGE);
-        const fetchedEvents = await fetchEvents(limit, 0, searchQuery.trim() || undefined, selectedType || undefined);
+        const fetchedEvents = await fetchEventsClient(limit, 0, searchQuery.trim() || undefined, selectedType || undefined);
         setEvents(Array.isArray(fetchedEvents) ? fetchedEvents : []);
         // Only show "Load More" when no filters/search are active
         setHasMore(fetchedEvents.length === limit && !searchQuery && !selectedType);
@@ -67,7 +67,7 @@ export default function EventsPage() {
     
     try {
       setLoadingMore(true);
-      const fetchedEvents = await fetchEvents(
+      const fetchedEvents = await fetchEventsClient(
         ITEMS_PER_PAGE,
         events.length,
         searchQuery.trim() || undefined,
