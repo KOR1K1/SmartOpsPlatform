@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { logger } from "@/lib/logger";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 export default function KnowledgeError({
   error,
@@ -10,24 +9,14 @@ export default function KnowledgeError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    logger.error("Knowledge error", error, "KnowledgeError");
-  }, [error]);
-
   return (
-    <div className="container py-8">
-      <div className="mx-auto max-w-md text-center">
-        <h2 className="text-2xl font-semibold">Knowledge Hub Error</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Failed to load knowledge documents. Please try again.
-        </p>
-        <button
-          onClick={reset}
-          className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          Retry
-        </button>
-      </div>
-    </div>
+    <ErrorBoundary
+      error={error}
+      reset={reset}
+      title="Knowledge Hub Error"
+      message="Failed to load knowledge documents. Please try again."
+      showHomeButton={true}
+      context="KnowledgeError"
+    />
   );
 }

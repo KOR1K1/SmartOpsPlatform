@@ -2,7 +2,7 @@
 
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 
-export default function DashboardError({
+export default function AuthError({
   error,
   reset,
 }: {
@@ -13,10 +13,9 @@ export default function DashboardError({
     <ErrorBoundary
       error={error}
       reset={reset}
-      title="Dashboard Error"
-      message="Failed to load dashboard data. Please try again."
-      showHomeButton={false}
-      context="DashboardError"
+      title="Authentication Error"
+      message="An error occurred during authentication. Please try again."
+      context="AuthError"
     />
   );
 }
