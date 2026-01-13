@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, Inject } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
 import { KnowledgeDocumentWhereInput } from "../common/types";
+import { validatePagination, validateSearchQuery } from "../common/utils/validation.utils";
+import { EntityNotFoundException } from "../common/exceptions/not-found.exception";
 
 @Injectable()
 export class KnowledgeService {
@@ -26,19 +28,9 @@ export class KnowledgeService {
   }
 
   async getDocuments(categoryId?: number, limit = 50, offset = 0, q?: string) {
-    // Validate and sanitize inputs
-    if (q && q.length > 200) {
-      throw new BadRequestException("Search query must not exceed 200 characters");
-    }
-    if (limit > 500) {
-      throw new BadRequestException("Limit must not exceed 500");
-    }
-    if (limit < 1) {
-      throw new BadRequestException("Limit must be at least 1");
-    }
-    if (offset < 0) {
-      throw new BadRequestException("Offset must be non-negative");
-    }
+    // Validate and sanitize inputs using centralized utilities
+    validatePagination({ limit, offset, maxLimit: 500, minLimit: 1 });
+    validateSearchQuery({ query: q, maxLength: 200 });
 
     const filters: KnowledgeDocumentWhereInput = {
       deletedAt: null,
@@ -121,7 +113,7 @@ export class KnowledgeService {
     });
 
     if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
+      throw new EntityNotFoundException("Document", id, "ID");
     }
 
     return document;
@@ -141,7 +133,7 @@ export class KnowledgeService {
     });
 
     if (!document) {
-      throw new NotFoundException(`Document with slug ${slug} not found`);
+      throw new EntityNotFoundException("Document", slug, "slug");
     }
 
     return document;

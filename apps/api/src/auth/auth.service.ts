@@ -1,7 +1,5 @@
 import {
   Injectable,
-  UnauthorizedException,
-  ConflictException,
   Inject,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
@@ -12,6 +10,8 @@ import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { env } from "../config/env";
 import { AppLogger } from "../common/logger/logger.service";
+import { ResourceConflictException } from "../common/exceptions/conflict.exception";
+import { InvalidCredentialsException, UserNotFoundException } from "../common/exceptions/unauthorized.exception";
 
 @Injectable()
 export class AuthService {
@@ -30,7 +30,7 @@ export class AuthService {
 
     if (existingUser) {
       this.logger.warn(`Registration failed: email already exists - ${registerDto.email}`, "AuthService");
-      throw new ConflictException("User with this email already exists");
+      throw new ResourceConflictException("User", "email", registerDto.email);
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -79,7 +79,7 @@ export class AuthService {
 
     if (!user || user.deletedAt) {
       this.logger.warn(`Login failed: user not found or deleted - ${loginDto.email}`, "AuthService");
-      throw new UnauthorizedException("Invalid credentials");
+      throw new InvalidCredentialsException();
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -89,7 +89,7 @@ export class AuthService {
 
     if (!isPasswordValid) {
       this.logger.warn(`Login failed: invalid password - ${loginDto.email}`, "AuthService");
-      throw new UnauthorizedException("Invalid credentials");
+      throw new InvalidCredentialsException();
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role.name);
@@ -116,7 +116,7 @@ export class AuthService {
 
     if (!user || user.deletedAt) {
       this.logger.warn(`Token refresh failed: user not found or deleted - ID: ${userId}`, "AuthService");
-      throw new UnauthorizedException("User not found");
+      throw new UserNotFoundException();
     }
 
     this.logger.debug(`Token refreshed successfully for user ID: ${userId}`, "AuthService");

@@ -5,13 +5,14 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
-  BadRequestException,
   Inject,
 } from "@nestjs/common";
 import { KnowledgeService } from "./knowledge.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { SearchQueryDto } from "../common/dto/pagination-query.dto";
 import { AppLogger } from "../common/logger/logger.service";
+import { ValidationException } from "../common/exceptions/validation.exception";
+import { validateStringLength } from "../common/utils/validation.utils";
 
 @Controller("knowledge")
 @UseGuards(JwtAuthGuard)
@@ -36,7 +37,7 @@ export class KnowledgeController {
     if (categoryId) {
       const parsed = parseInt(categoryId, 10);
       if (isNaN(parsed)) {
-        throw new BadRequestException("categoryId must be a valid number");
+        throw new ValidationException("categoryId must be a valid number", "categoryId");
       }
       parsedCategoryId = parsed;
     }
@@ -60,9 +61,7 @@ export class KnowledgeController {
   @Get("documents/slug/:slug")
   getDocumentBySlug(@Param("slug") slug: string) {
     // Validate slug length (typical slug max length is 255)
-    if (slug.length > 255) {
-      throw new BadRequestException("Slug must not exceed 255 characters");
-    }
+    validateStringLength(slug, "slug", 255, 1);
     return this.knowledgeService.getDocumentBySlug(slug);
   }
 }

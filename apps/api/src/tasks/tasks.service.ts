@@ -1,7 +1,9 @@
-import { Injectable, BadRequestException, Inject } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
 import { AppLogger } from "../common/logger/logger.service";
+import { ValidationException } from "../common/exceptions/validation.exception";
+import { validateStringLength } from "../common/utils/validation.utils";
 
 // Type alias for backward compatibility
 type CreateTaskInput = CreateTaskDto;
@@ -18,27 +20,24 @@ export class TasksService {
     
     // Validate title
     if (!data.title?.trim()) {
-      throw new BadRequestException("Title is required");
+      throw new ValidationException("Title is required", "title");
     }
     const title = data.title.trim();
-    if (title.length > 255) {
-      throw new BadRequestException("Title must not exceed 255 characters");
-    }
+    validateStringLength(title, "title", 255, 1);
 
     // Validate description
     const description = data.description?.trim() || "";
-    if (description.length > 10000) {
-      throw new BadRequestException("Description must not exceed 10000 characters");
-    }
+    validateStringLength(description, "description", 10000);
 
     // Validate status
     const status = data.status?.trim() || "created";
-    if (status.length > 50) {
-      throw new BadRequestException("Status must not exceed 50 characters");
-    }
+    validateStringLength(status, "status", 50);
     const validStatuses = ["created", "in_progress", "completed", "cancelled"];
     if (!validStatuses.includes(status)) {
-      throw new BadRequestException(`Status must be one of: ${validStatuses.join(", ")}`);
+      throw new ValidationException(
+        `Status must be one of: ${validStatuses.join(", ")}`,
+        "status"
+      );
     }
 
     this.logger.debug(`Creating task with status: ${status}`, "TasksService");

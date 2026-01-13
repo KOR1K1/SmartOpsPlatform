@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException, Inject } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
 import { TaskEventWhereInput, SystemEventMetadata } from "../common/types";
+import { validatePagination, validateSearchQuery, validateStringLength } from "../common/utils/validation.utils";
 
 @Injectable()
 export class EventsService {
@@ -11,22 +12,10 @@ export class EventsService {
   ) {}
 
   async getTaskEvents(limit = 50, offset = 0, q?: string, type?: string) {
-    // Validate and sanitize inputs
-    if (q && q.length > 200) {
-      throw new BadRequestException("Search query must not exceed 200 characters");
-    }
-    if (type && type.length > 50) {
-      throw new BadRequestException("Event type must not exceed 50 characters");
-    }
-    if (limit > 500) {
-      throw new BadRequestException("Limit must not exceed 500");
-    }
-    if (limit < 1) {
-      throw new BadRequestException("Limit must be at least 1");
-    }
-    if (offset < 0) {
-      throw new BadRequestException("Offset must be non-negative");
-    }
+    // Validate and sanitize inputs using centralized utilities
+    validatePagination({ limit, offset, maxLimit: 500, minLimit: 1 });
+    validateSearchQuery({ query: q, maxLength: 200 });
+    validateStringLength(type, "type", 50);
 
     const filters: TaskEventWhereInput = { deletedAt: null };
 

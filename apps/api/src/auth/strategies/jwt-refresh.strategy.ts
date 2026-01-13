@@ -1,9 +1,10 @@
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { env } from "../../config/env";
 import { PrismaService } from "../../prisma/prisma.service";
 import { JwtPayload, AuthenticatedUser } from "../../common/types";
+import { UserNotFoundException } from "../../common/exceptions/unauthorized.exception";
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -25,7 +26,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
 
     if (!user || user.deletedAt) {
-      throw new UnauthorizedException("User not found");
+      throw new UserNotFoundException();
     }
 
     return {
