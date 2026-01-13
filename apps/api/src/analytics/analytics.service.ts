@@ -1,20 +1,35 @@
 import { Injectable, Inject } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
+import { env } from "../config/env";
 
 @Injectable()
 export class AnalyticsService {
+  private readonly CACHE_KEY_DASHBOARD = "analytics:dashboard:stats";
+  private readonly CACHE_TTL = env.redisTtl * 1000; // Convert to milliseconds
+
   constructor(
     private prisma: PrismaService,
-    @Inject(AppLogger) private readonly logger: AppLogger
+    @Inject(AppLogger) private readonly logger: AppLogger,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   /**
-   * Get dashboard statistics with optimized queries
+   * Get dashboard statistics with optimized queries and caching
    * Uses $transaction for data consistency and performance
    * All queries run in parallel within a transaction
+   * Results are cached to reduce database load
    */
   async getDashboardStats() {
+    // Try to get from cache first
+    const cached = await this.cacheManager.get<any>(this.CACHE_KEY_DASHBOARD);
+    if (cached) {
+      this.logger.debug("Dashboard stats served from cache", "AnalyticsService");
+      return cached;
+    }
+
     // Use transaction for consistency and better performance
     // All queries run in parallel, ensuring consistent snapshot of data
     const result = await this.prisma.$transaction(
@@ -87,7 +102,19 @@ export class AnalyticsService {
       }
     );
 
-    this.logger.debug("Dashboard stats fetched successfully", "AnalyticsService");
+    // Cache the result
+    await this.cacheManager.set(this.CACHE_KEY_DASHBOARD, result, this.CACHE_TTL);
+    this.logger.debug("Dashboard stats fetched and cached successfully", "AnalyticsService");
+    
     return result;
+  }
+
+  /**
+   * Invalidate dashboard cache
+   * Call this when data changes that affects dashboard stats
+   */
+  async invalidateDashboardCache(): Promise<void> {
+    await this.cacheManager.del(this.CACHE_KEY_DASHBOARD);
+    this.logger.debug("Dashboard cache invalidated", "AnalyticsService");
   }
 }

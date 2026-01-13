@@ -14,9 +14,16 @@ function getEnv(key: string, defaultValue?: string): string {
   return value || defaultValue!;
 }
 
+// Determine if we're running on server or client
+const isServer = typeof window === "undefined";
+
 export const env = {
   // API URL - use internal Docker service name for Server Components, public URL for Client Components
-  apiUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
+  // In client components (browser), only NEXT_PUBLIC_* vars are available
+  // In server components, prefer API_URL (internal Docker network) for better performance
+  apiUrl: isServer
+    ? (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000")
+    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"),
 
   // App URL (public - for metadata, sitemap, etc.)
   appUrl: getEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),

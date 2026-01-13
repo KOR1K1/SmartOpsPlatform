@@ -1,7 +1,8 @@
-import { Controller, Get, UseGuards, Inject } from "@nestjs/common";
+import { Controller, Get, UseGuards, Inject, Header } from "@nestjs/common";
 import { AnalyticsService } from "./analytics.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { AppLogger } from "../common/logger/logger.service";
+import { env } from "../config/env";
 
 @Controller("analytics")
 @UseGuards(JwtAuthGuard)
@@ -12,7 +13,10 @@ export class AnalyticsController {
   ) {}
 
   @Get("dashboard")
-  getDashboardStats() {
-    return this.analyticsService.getDashboardStats();
+  @Header("Cache-Control", `public, max-age=${env.redisTtl}`)
+  @Header("X-Cache-Status", "enabled")
+  async getDashboardStats() {
+    const stats = await this.analyticsService.getDashboardStats();
+    return stats;
   }
 }

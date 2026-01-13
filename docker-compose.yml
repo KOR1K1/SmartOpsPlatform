@@ -20,6 +20,24 @@ services:
     networks:
       - smartops-network
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: smartops-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartops-network
+
   # NestJS API
   api:
     build:
@@ -29,8 +47,11 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://smartops:smartops_password@postgres:5432/smartops?schema=public&connection_limit=10&pool_timeout=30
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_TTL: 300
       PORT: 4000
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       FRONTEND_URL: http://web:3000
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
       JWT_EXPIRES_IN: 15m
@@ -45,6 +66,8 @@ services:
       - "4000:4000"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - smartops-network
@@ -78,3 +101,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis_data:

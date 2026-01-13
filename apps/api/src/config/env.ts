@@ -114,7 +114,28 @@ function validateBodyParserLimit(key: string, value: string): string {
 function validateJwtSecret(key: string, value: string): string {
   const minLength = 32;
   const isDefault = value.includes("change-in-production") || value.includes("your-secret");
+  const nodeEnv = getEnv("NODE_ENV", "development");
   
+  // In development, allow shorter secrets but warn
+  if (nodeEnv === "development") {
+    if (value.length < 16) {
+      throw new Error(
+        `❌ ${key} is too short (${value.length} chars, minimum 16 for development)\n` +
+        `   Please provide a longer secret (at least 16 characters)`
+      );
+    }
+    // In development, allow default values but warn
+    if (isDefault) {
+      console.warn(
+        `⚠️  Warning: ${key} appears to be using a default/placeholder value.\n` +
+        `   This is acceptable for development but MUST be changed for production.`
+      );
+      return value;
+    }
+    return value;
+  }
+  
+  // In production, enforce strict validation
   if (isDefault) {
     throw new Error(
       `❌ Security warning: ${key} appears to be using a default/placeholder value\n` +
@@ -155,6 +176,9 @@ interface EnvConfig {
   readonly jwtExpiresIn: string;
   readonly jwtRefreshSecret: string;
   readonly jwtRefreshExpiresIn: string;
+  readonly redisHost: string;
+  readonly redisPort: number;
+  readonly redisTtl: number;
 }
 
 // Validate NODE_ENV
@@ -198,6 +222,11 @@ export const env: EnvConfig = {
   jwtExpiresIn: getEnv("JWT_EXPIRES_IN", "15m"), // Format validated by @nestjs/jwt
   jwtRefreshSecret: validateJwtSecret("JWT_REFRESH_SECRET", getEnv("JWT_REFRESH_SECRET")),
   jwtRefreshExpiresIn: getEnv("JWT_REFRESH_EXPIRES_IN", "7d"), // Format validated by @nestjs/jwt
+
+  // Redis Cache
+  redisHost: getEnv("REDIS_HOST", "localhost"),
+  redisPort: getEnvNumber("REDIS_PORT", 6379, { min: 1, max: 65535 }),
+  redisTtl: getEnvNumber("REDIS_TTL", 300, { min: 1, max: 86400 }), // Default 5 minutes, max 24 hours
 };
 
 // Log validation success in development

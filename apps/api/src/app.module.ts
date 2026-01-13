@@ -10,6 +10,7 @@ import { KnowledgeModule } from "./knowledge/knowledge.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { WebSocketModule } from "./websocket/websocket.module";
 import { LoggerModule } from "./common/logger/logger.module";
+import { CacheModule } from "./common/cache/cache.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { RequestIdMiddleware } from "./common/middleware/request-id.middleware";
@@ -19,6 +20,7 @@ import { TimeoutInterceptor } from "./common/interceptors/timeout.interceptor";
 @Module({
   imports: [
     LoggerModule,
+    CacheModule,
     PrismaModule,
     AuthModule,
     UsersModule,
