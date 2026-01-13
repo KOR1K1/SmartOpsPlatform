@@ -1,6 +1,11 @@
 import { Injectable, LoggerService } from "@nestjs/common";
 import * as winston from "winston";
+import { getRequestId } from "../middleware/request-id.middleware";
 
+/**
+ * Custom logger service with request ID support
+ * Automatically includes request ID in all log entries when available
+ */
 @Injectable()
 export class AppLogger implements LoggerService {
   private logger: winston.Logger;
@@ -14,6 +19,14 @@ export class AppLogger implements LoggerService {
         winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
         winston.format.errors({ stack: true }),
         winston.format.splat(),
+        // Добавляем request ID в формат логов
+        winston.format((info) => {
+          const requestId = getRequestId();
+          if (requestId) {
+            info.requestId = requestId;
+          }
+          return info;
+        })(),
         winston.format.json()
       ),
       defaultMeta: { service: "smartops-api" },
@@ -22,8 +35,9 @@ export class AppLogger implements LoggerService {
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize(),
-            winston.format.printf(({ timestamp, level, message, ...meta }) => {
-              let msg = `${timestamp} [${level}]: ${message}`;
+            winston.format.printf(({ timestamp, level, message, requestId, ...meta }) => {
+              const requestIdStr = requestId ? `[${requestId}]` : "";
+              let msg = `${timestamp} [${level}]${requestIdStr} ${message}`;
               if (Object.keys(meta).length > 0) {
                 msg += ` ${JSON.stringify(meta)}`;
               }

@@ -9,6 +9,7 @@ import {
 import { Request, Response } from "express";
 import { AppLogger } from "../logger/logger.service";
 import { HttpExceptionResponse } from "../types";
+import { getRequestId } from "../middleware/request-id.middleware";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -33,6 +34,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ? message 
       : (message as HttpExceptionResponse).message || String(message);
 
+    // Get request ID from context
+    const requestId = getRequestId() || (request as any).requestId;
+
     // Log error (only log server errors, not client errors like 400, 401, 404)
     if (status >= 500) {
       this.logger.error(
@@ -48,11 +52,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
       );
     }
 
+    // Include request ID in response header (if not already set by middleware)
+    if (requestId && !response.getHeader("X-Request-ID")) {
+      response.setHeader("X-Request-ID", requestId);
+    }
+
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
       message: errorMessage,
+      requestId: requestId, // Include request ID in error response
     });
   }
 }
