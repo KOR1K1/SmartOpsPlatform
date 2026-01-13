@@ -28,7 +28,7 @@ services:
     container_name: smartops-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://smartops:smartops_password@postgres:5432/smartops?schema=public
+      DATABASE_URL: postgresql://smartops:smartops_password@postgres:5432/smartops?schema=public&connection_limit=10&pool_timeout=30
       PORT: 4000
       NODE_ENV: production
       FRONTEND_URL: http://web:3000
@@ -36,6 +36,9 @@ services:
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-secret-key-change-in-production}
       JWT_REFRESH_EXPIRES_IN: 7d
+      DB_POOL_MAX: 10
+      DB_POOL_IDLE_MS: 30000
+      DB_POOL_TIMEOUT_MS: 5000
     ports:
       - "4000:4000"
     depends_on:

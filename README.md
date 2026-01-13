@@ -179,7 +179,11 @@ Create `.env` file in the root directory:
 
 ```env
 # Database Configuration
-DATABASE_URL=postgresql://smartops:smartops_password@postgres:5432/smartops?schema=public
+# For Docker: use service name 'postgres' as host and configure safe pool limits
+DATABASE_URL=postgresql://smartops:smartops_password@postgres:5432/smartops?schema=public&connection_limit=10&pool_timeout=30
+DB_POOL_MAX=10
+DB_POOL_IDLE_MS=30000
+DB_POOL_TIMEOUT_MS=5000
 
 # API Configuration
 PORT=4000
@@ -203,7 +207,10 @@ For local development without Docker:
 
 ```env
 # Database
-DATABASE_URL="postgresql://smartops:smartops_password@localhost:5432/smartops?schema=public"
+DATABASE_URL="postgresql://smartops:smartops_password@localhost:5432/smartops?schema=public&connection_limit=10&pool_timeout=30"
+DB_POOL_MAX=10
+DB_POOL_IDLE_MS=30000
+DB_POOL_TIMEOUT_MS=5000
 
 # Server
 PORT=4000

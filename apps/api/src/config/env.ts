@@ -27,6 +27,9 @@ type NodeEnv = "development" | "production" | "test";
 
 interface EnvConfig {
   readonly databaseUrl: string;
+  readonly dbPoolMax: number;
+  readonly dbPoolIdleMs: number;
+  readonly dbPoolTimeoutMs: number;
   readonly port: number;
   readonly nodeEnv: NodeEnv;
   readonly frontendUrl: string;
@@ -40,6 +43,9 @@ interface EnvConfig {
 export const env: EnvConfig = {
   // Database
   databaseUrl: getEnv("DATABASE_URL"),
+  dbPoolMax: getEnvNumber("DB_POOL_MAX", 10),
+  dbPoolIdleMs: getEnvNumber("DB_POOL_IDLE_MS", 30000),
+  dbPoolTimeoutMs: getEnvNumber("DB_POOL_TIMEOUT_MS", 5000),
 
   // Server
   port: getEnvNumber("PORT", 4000),
