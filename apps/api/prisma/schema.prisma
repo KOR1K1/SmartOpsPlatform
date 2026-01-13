@@ -21,6 +21,7 @@ model User {
 
   @@index([email])
   @@index([roleId])
+  @@index([deletedAt]) // Index for count queries
   @@map("users")
 }
 
@@ -51,6 +52,7 @@ model Task {
   @@index([assigneeId])
   @@index([status])
   @@index([createdAt])
+  @@index([deletedAt, status]) // Composite index for analytics queries
   @@map("tasks")
 }
 
@@ -69,6 +71,7 @@ model TaskEvent {
   @@index([userId])
   @@index([type])
   @@index([createdAt])
+  @@index([deletedAt, createdAt]) // Composite index for recent events queries
   @@map("task_events")
 }
 
@@ -113,6 +116,7 @@ model KnowledgeDocument {
   @@index([categoryId])
   @@index([slug])
   @@index([createdAt])
+  @@index([deletedAt]) // Index for count queries
   @@map("knowledge_documents")
 }
 

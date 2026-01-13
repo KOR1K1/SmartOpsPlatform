@@ -9,57 +9,85 @@ export class AnalyticsService {
     @Inject(AppLogger) private readonly logger: AppLogger
   ) {}
 
+  /**
+   * Get dashboard statistics with optimized queries
+   * Uses $transaction for data consistency and performance
+   * All queries run in parallel within a transaction
+   */
   async getDashboardStats() {
-    const [totalTasks, activeTasks, totalUsers, totalEvents, totalDocuments] =
-      await Promise.all([
-        this.prisma.task.count({ where: { deletedAt: null } }),
-        this.prisma.task.count({
-          where: { status: "in_progress", deletedAt: null },
-        }),
-        this.prisma.user.count({ where: { deletedAt: null } }),
-        this.prisma.taskEvent.count({ where: { deletedAt: null } }),
-        this.prisma.knowledgeDocument.count({ where: { deletedAt: null } }),
-      ]);
+    // Use transaction for consistency and better performance
+    // All queries run in parallel, ensuring consistent snapshot of data
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        // Execute all count queries in parallel
+        const [
+          totalTasks,
+          activeTasks,
+          totalUsers,
+          totalEvents,
+          totalDocuments,
+          tasksByStatus,
+        ] = await Promise.all([
+          // Count queries - optimized with composite indexes
+          tx.task.count({ where: { deletedAt: null } }),
+          tx.task.count({
+            where: { status: "in_progress", deletedAt: null },
+          }),
+          tx.user.count({ where: { deletedAt: null } }),
+          tx.taskEvent.count({ where: { deletedAt: null } }),
+          tx.knowledgeDocument.count({ where: { deletedAt: null } }),
+          // GroupBy query - can be optimized further with materialized views
+          tx.task.groupBy({
+            by: ["status"],
+            where: { deletedAt: null },
+            _count: true,
+          }),
+        ]);
 
-    const tasksByStatus = await this.prisma.task.groupBy({
-      by: ["status"],
-      where: { deletedAt: null },
-      _count: true,
-    });
-
-    const recentEvents = await this.prisma.taskEvent.findMany({
-      where: { deletedAt: null },
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: {
-        task: {
-          select: {
-            id: true,
-            title: true,
+        // Fetch recent events with relations
+        // This query benefits from composite index on [deletedAt, createdAt]
+        const recentEvents = await tx.taskEvent.findMany({
+          where: { deletedAt: null },
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: {
+            task: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
+        });
 
-    return {
-      totals: {
-        tasks: totalTasks,
-        activeTasks,
-        users: totalUsers,
-        events: totalEvents,
-        documents: totalDocuments,
+        return {
+          totals: {
+            tasks: totalTasks,
+            activeTasks,
+            users: totalUsers,
+            events: totalEvents,
+            documents: totalDocuments,
+          },
+          tasksByStatus: tasksByStatus.map((item) => ({
+            status: item.status,
+            count: item._count,
+          })),
+          recentEvents,
+        };
       },
-      tasksByStatus: tasksByStatus.map((item) => ({
-        status: item.status,
-        count: item._count,
-      })),
-      recentEvents,
-    };
+      {
+        // Transaction timeout - prevent long-running queries
+        timeout: 10000, // 10 seconds
+      }
+    );
+
+    this.logger.debug("Dashboard stats fetched successfully", "AnalyticsService");
+    return result;
   }
 }
