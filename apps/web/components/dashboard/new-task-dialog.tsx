@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { fetchWithTimeout } from "@/lib/http";
 
 export function NewTaskDialog() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export function NewTaskDialog() {
 
     startTransition(async () => {
       try {
-        const response = await fetch("/api/tasks", {
+        const response = await fetchWithTimeout("/api/tasks", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

@@ -30,6 +30,7 @@ interface EnvConfig {
   readonly port: number;
   readonly nodeEnv: NodeEnv;
   readonly frontendUrl: string;
+  readonly requestTimeoutMs: number;
   readonly jwtSecret: string;
   readonly jwtExpiresIn: string;
   readonly jwtRefreshSecret: string;
@@ -46,6 +47,9 @@ export const env: EnvConfig = {
 
   // CORS
   frontendUrl: getEnv("FRONTEND_URL", "http://localhost:3000"),
+
+  // HTTP
+  requestTimeoutMs: getEnvNumber("REQUEST_TIMEOUT_MS", 10000),
 
   // JWT
   jwtSecret: getEnv("JWT_SECRET"),

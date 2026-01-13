@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { logger } from "@/lib/logger";
+import { fetchWithTimeout } from "@/lib/http";
 
 export async function POST(request: Request) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
       hasToken: !!accessToken,
     });
 
-    const apiResponse = await fetch(`${apiUrl}/tasks`, {
+    const apiResponse = await fetchWithTimeout(`${apiUrl}/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

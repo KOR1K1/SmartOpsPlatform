@@ -4,6 +4,7 @@ import { AppLogger } from "../common/logger/logger.service";
 import { KnowledgeDocumentWhereInput } from "../common/types";
 import { validatePagination, validateSearchQuery } from "../common/utils/validation.utils";
 import { EntityNotFoundException } from "../common/exceptions/not-found.exception";
+import { sanitizeSearchQuery } from "../common/utils/sanitize.util";
 
 @Injectable()
 export class KnowledgeService {
@@ -37,8 +38,9 @@ export class KnowledgeService {
       ...(categoryId && { categoryId }),
     };
 
-    if (q) {
-      const query = q.trim();
+    const safeQuery = sanitizeSearchQuery(q);
+    if (safeQuery) {
+      const query = safeQuery;
       const numericMatch = query.match(/\d+/);
       const numericId = numericMatch ? parseInt(numericMatch[0], 10) : null;
 

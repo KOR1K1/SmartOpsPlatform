@@ -6,6 +6,7 @@
 "use client";
 
 import { logger } from "./logger";
+import { fetchWithTimeout } from "./http";
 
 /**
  * Client-side logout function
@@ -14,7 +15,7 @@ import { logger } from "./logger";
 export async function clientLogout() {
   try {
     // Call server action to clear cookies
-    const response = await fetch("/api/auth/logout", {
+    const response = await fetchWithTimeout("/api/auth/logout", {
       method: "POST",
     });
 

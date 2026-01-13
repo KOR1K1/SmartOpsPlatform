@@ -4,6 +4,7 @@ import { CreateTaskDto } from "./dto/create-task.dto";
 import { AppLogger } from "../common/logger/logger.service";
 import { ValidationException } from "../common/exceptions/validation.exception";
 import { validateStringLength } from "../common/utils/validation.utils";
+import { sanitizeString } from "../common/utils/sanitize.util";
 
 // Type alias for backward compatibility
 type CreateTaskInput = CreateTaskDto;
@@ -22,11 +23,11 @@ export class TasksService {
     if (!data.title?.trim()) {
       throw new ValidationException("Title is required", "title");
     }
-    const title = data.title.trim();
+    const title = sanitizeString(data.title);
     validateStringLength(title, "title", 255, 1);
 
     // Validate description
-    const description = data.description?.trim() || "";
+    const description = sanitizeString(data.description);
     validateStringLength(description, "description", 10000);
 
     // Validate status

@@ -8,6 +8,7 @@ import { getAccessToken } from "./auth-cookies";
 import { refreshToken as refreshTokenApi } from "./auth-api";
 import { getRefreshToken, updateAccessToken } from "./auth-cookies";
 import { logger } from "./logger";
+import { fetchWithRetry } from "./http";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -71,13 +72,21 @@ export async function fetchApi<T = unknown>(
   }
 
   try {
-    const response = await fetch(url, {
-      method,
-      headers: requestHeaders,
-      body: body ? JSON.stringify(body) : undefined,
-      cache,
-      next,
-    });
+    const response = await fetchWithRetry(
+      url,
+      {
+        method,
+        headers: requestHeaders,
+        body: body ? JSON.stringify(body) : undefined,
+        cache,
+        next,
+      },
+      {
+        // Keep retries small to avoid overloading API, only for transient errors
+        retries: 1,
+        backoffMs: 300,
+      }
+    );
 
     // Handle 401 Unauthorized - try to refresh token
     if (response.status === 401 && accessToken) {
@@ -89,13 +98,19 @@ export async function fetchApi<T = unknown>(
 
           // Retry request with new token
           requestHeaders.Authorization = `Bearer ${newTokens.accessToken}`;
-          const retryResponse = await fetch(url, {
-            method,
-            headers: requestHeaders,
-            body: body ? JSON.stringify(body) : undefined,
-            cache,
-            next,
-          });
+          const retryResponse = await fetchWithRetry(
+            url,
+            {
+              method,
+              headers: requestHeaders,
+              body: body ? JSON.stringify(body) : undefined,
+              cache,
+              next,
+            },
+            {
+              retries: 0,
+            }
+          );
 
           if (!retryResponse.ok) {
             const errorText = await retryResponse.text().catch(() => "Unknown error");

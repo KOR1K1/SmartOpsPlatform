@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/auth-cookies";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { fetchWithTimeout } from "@/lib/http";
 
 /**
  * API route to proxy events requests from Client Components
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Make request to backend API
     const apiUrl = env.apiUrl;
-    const response = await fetch(`${apiUrl}/events/tasks?${params.toString()}`, {
+    const response = await fetchWithTimeout(`${apiUrl}/events/tasks?${params.toString()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
 import { TaskEventWhereInput, SystemEventMetadata } from "../common/types";
 import { validatePagination, validateSearchQuery, validateStringLength } from "../common/utils/validation.utils";
+import { sanitizeSearchQuery, sanitizeString } from "../common/utils/sanitize.util";
 
 @Injectable()
 export class EventsService {
@@ -19,12 +20,14 @@ export class EventsService {
 
     const filters: TaskEventWhereInput = { deletedAt: null };
 
-    if (type) {
-      filters.type = type.trim();
+    const safeType = sanitizeString(type);
+    if (safeType) {
+      filters.type = safeType;
     }
 
-    if (q) {
-      const query = q.trim();
+    const safeQuery = sanitizeSearchQuery(q);
+    if (safeQuery) {
+      const query = safeQuery;
       const numericMatch = query.match(/\d+/);
       const numericId = numericMatch ? parseInt(numericMatch[0], 10) : null;
 

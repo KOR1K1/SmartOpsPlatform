@@ -23,4 +23,6 @@ export const env = {
 
   // Environment
   nodeEnv: getEnv("NODE_ENV", "development"),
+  // Request timeout for frontend HTTP requests (in milliseconds)
+  requestTimeoutMs: Number(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT_MS || "10000"),
 } as const;

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
+import { fetchWithTimeout } from "@/lib/http";
 
 export interface User {
   id: number;
@@ -33,9 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchUser() {
     try {
-      const response = await fetch("/api/auth/me", {
-        credentials: "include",
-      });
+      const response = await fetchWithTimeout(
+        "/api/auth/me",
+        {
+          credentials: "include",
+        }
+      );
       
       if (response.ok) {
         const data = await response.json();
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function logout() {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetchWithTimeout("/api/auth/logout", { method: "POST" });
       setUser(null);
       router.push("/login");
       router.refresh();

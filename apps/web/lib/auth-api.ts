@@ -4,6 +4,7 @@
  */
 
 import { env } from "./env";
+import { fetchWithTimeout } from "./http";
 
 export interface LoginCredentials {
   email: string;
@@ -38,7 +39,7 @@ export interface RefreshTokenResponse {
 export async function login(
   credentials: LoginCredentials
 ): Promise<AuthResponse> {
-  const response = await fetch(`${env.apiUrl}/auth/login`, {
+  const response = await fetchWithTimeout(`${env.apiUrl}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -62,7 +63,7 @@ export async function login(
 export async function register(
   credentials: RegisterCredentials
 ): Promise<AuthResponse> {
-  const response = await fetch(`${env.apiUrl}/auth/register`, {
+  const response = await fetchWithTimeout(`${env.apiUrl}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -86,7 +87,7 @@ export async function register(
 export async function refreshToken(
   refreshToken: string
 ): Promise<RefreshTokenResponse> {
-  const response = await fetch(`${env.apiUrl}/auth/refresh`, {
+  const response = await fetchWithTimeout(`${env.apiUrl}/auth/refresh`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
