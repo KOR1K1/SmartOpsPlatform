@@ -55,24 +55,43 @@ export function LoginForm() {
         // This ensures navbar shows user info right away without waiting for /api/auth/me
         setUser(response.user);
         
+        toast.success("Login successful", "Welcome back!");
+        
+        // Server Action will redirect - this may throw NEXT_REDIRECT error
+        // which is expected and should not be treated as a failure
         await setAuthTokensAction(
           response.accessToken,
           response.refreshToken,
           response.user
         );
-        toast.success("Login successful", "Welcome back!");
       } else {
         const errorMsg = "Invalid response from server";
         setError(errorMsg);
         toast.error("Login failed", errorMsg);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : "Failed to login. Please check your credentials and try again.";
+      // Check if this is a Next.js redirect error (expected behavior)
+      // redirect() throws a special error that should be ignored
+      const isRedirectError =
+        err instanceof Error &&
+        (err.message === "NEXT_REDIRECT" ||
+          err.message.includes("NEXT_REDIRECT") ||
+          (err as any).digest?.startsWith("NEXT_REDIRECT") ||
+          (err as any).digest?.includes("redirect"));
+
+      if (isRedirectError) {
+        // This is expected - redirect is happening, don't show error
+        // The redirect will happen automatically
+        return;
+      }
+
+      // Only show error for actual failures
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to login. Please check your credentials and try again.";
       setError(errorMessage);
       toast.error("Login failed", errorMessage);
-    } finally {
       setIsLoading(false);
     }
   }

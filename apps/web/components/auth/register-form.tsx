@@ -51,20 +51,39 @@ export function RegisterForm() {
       // Store tokens in httpOnly cookies via Server Action
       // Server Action will handle redirect after setting cookies
       if (response.accessToken && response.refreshToken) {
+        toast.success("Account created successfully", "Welcome! Redirecting to dashboard...");
+        
+        // Server Action will redirect - this may throw NEXT_REDIRECT error
+        // which is expected and should not be treated as a failure
         await setAuthTokensAction(
           response.accessToken,
           response.refreshToken,
           response.user
         );
-        toast.success("Account created successfully", "Welcome! Redirecting to dashboard...");
       }
     } catch (err) {
-      const errorMessage = err instanceof Error
-        ? err.message
-        : "Failed to register. Please check your information and try again.";
+      // Check if this is a Next.js redirect error (expected behavior)
+      // redirect() throws a special error that should be ignored
+      const isRedirectError =
+        err instanceof Error &&
+        (err.message === "NEXT_REDIRECT" ||
+          err.message.includes("NEXT_REDIRECT") ||
+          (err as any).digest?.startsWith("NEXT_REDIRECT") ||
+          (err as any).digest?.includes("redirect"));
+
+      if (isRedirectError) {
+        // This is expected - redirect is happening, don't show error
+        // The redirect will happen automatically
+        return;
+      }
+
+      // Only show error for actual failures
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to register. Please check your information and try again.";
       setError(errorMessage);
       toast.error("Registration failed", errorMessage);
-    } finally {
       setIsLoading(false);
     }
   }
