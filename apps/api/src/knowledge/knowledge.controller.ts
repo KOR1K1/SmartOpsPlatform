@@ -4,12 +4,12 @@ import {
   Param,
   Query,
   ParseIntPipe,
-  DefaultValuePipe,
   UseGuards,
-  ParseBoolPipe,
+  BadRequestException,
 } from "@nestjs/common";
 import { KnowledgeService } from "./knowledge.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SearchQueryDto } from "../common/dto/pagination-query.dto";
 
 @Controller("knowledge")
 @UseGuards(JwtAuthGuard)
@@ -23,13 +23,28 @@ export class KnowledgeController {
 
   @Get("documents")
   getDocuments(
-    @Query("categoryId", new DefaultValuePipe(undefined)) categoryId?: string,
-    @Query("limit", new DefaultValuePipe(50), ParseIntPipe) limit?: number,
-    @Query("offset", new DefaultValuePipe(0), ParseIntPipe) offset?: number,
-    @Query("q") q?: string
+    @Query("categoryId") categoryId?: string,
+    @Query() pagination: SearchQueryDto = {}
   ) {
-    const parsedCategoryId = categoryId ? parseInt(categoryId, 10) : undefined;
-    return this.knowledgeService.getDocuments(parsedCategoryId, limit, offset, q);
+    // Validate categoryId
+    let parsedCategoryId: number | undefined;
+    if (categoryId) {
+      const parsed = parseInt(categoryId, 10);
+      if (isNaN(parsed)) {
+        throw new BadRequestException("categoryId must be a valid number");
+      }
+      parsedCategoryId = parsed;
+    }
+
+    // Sanitize search query (validation is done by DTO)
+    const searchQuery = pagination.q?.trim();
+
+    return this.knowledgeService.getDocuments(
+      parsedCategoryId,
+      pagination.limit || 50,
+      pagination.offset || 0,
+      searchQuery
+    );
   }
 
   @Get("documents/:id")
@@ -39,6 +54,10 @@ export class KnowledgeController {
 
   @Get("documents/slug/:slug")
   getDocumentBySlug(@Param("slug") slug: string) {
+    // Validate slug length (typical slug max length is 255)
+    if (slug.length > 255) {
+      throw new BadRequestException("Slug must not exceed 255 characters");
+    }
     return this.knowledgeService.getDocumentBySlug(slug);
   }
 }

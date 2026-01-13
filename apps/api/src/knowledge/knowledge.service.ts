@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -21,6 +21,20 @@ export class KnowledgeService {
   }
 
   async getDocuments(categoryId?: number, limit = 50, offset = 0, q?: string) {
+    // Validate and sanitize inputs
+    if (q && q.length > 200) {
+      throw new BadRequestException("Search query must not exceed 200 characters");
+    }
+    if (limit > 500) {
+      throw new BadRequestException("Limit must not exceed 500");
+    }
+    if (limit < 1) {
+      throw new BadRequestException("Limit must be at least 1");
+    }
+    if (offset < 0) {
+      throw new BadRequestException("Offset must be non-negative");
+    }
+
     const filters: any = {
       deletedAt: null,
       ...(categoryId && { categoryId }),

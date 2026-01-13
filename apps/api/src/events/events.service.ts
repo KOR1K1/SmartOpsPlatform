@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
@@ -6,10 +6,27 @@ export class EventsService {
   constructor(private prisma: PrismaService) {}
 
   async getTaskEvents(limit = 50, offset = 0, q?: string, type?: string) {
+    // Validate and sanitize inputs
+    if (q && q.length > 200) {
+      throw new BadRequestException("Search query must not exceed 200 characters");
+    }
+    if (type && type.length > 50) {
+      throw new BadRequestException("Event type must not exceed 50 characters");
+    }
+    if (limit > 500) {
+      throw new BadRequestException("Limit must not exceed 500");
+    }
+    if (limit < 1) {
+      throw new BadRequestException("Limit must be at least 1");
+    }
+    if (offset < 0) {
+      throw new BadRequestException("Offset must be non-negative");
+    }
+
     const filters: any = { deletedAt: null };
 
     if (type) {
-      filters.type = type;
+      filters.type = type.trim();
     }
 
     if (q) {

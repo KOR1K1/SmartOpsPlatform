@@ -7,13 +7,7 @@ import {
 } from "@nestjs/common";
 import { TasksService } from "./tasks.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-
-type CreateTaskDto = {
-  title: string;
-  description?: string;
-  status?: string;
-  assigneeId?: number | null;
-};
+import { CreateTaskDto } from "./dto/create-task.dto";
 
 @Controller("tasks")
 @UseGuards(JwtAuthGuard)
