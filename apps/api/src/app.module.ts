@@ -13,6 +13,7 @@ import { LoggerModule } from "./common/logger/logger.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { RequestIdMiddleware } from "./common/middleware/request-id.middleware";
+import { CsrfMiddleware } from "./common/middleware/csrf.middleware";
 
 @Module({
   imports: [
@@ -50,7 +51,11 @@ import { RequestIdMiddleware } from "./common/middleware/request-id.middleware";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // Apply RequestIdMiddleware to all routes
-    consumer.apply(RequestIdMiddleware).forRoutes("*");
+    // Apply middleware in order:
+    // 1. RequestIdMiddleware - must be first to generate request ID
+    // 2. CsrfMiddleware - validates Origin for state-changing requests
+    consumer
+      .apply(RequestIdMiddleware, CsrfMiddleware)
+      .forRoutes("*");
   }
 }

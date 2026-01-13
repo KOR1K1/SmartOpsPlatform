@@ -13,10 +13,11 @@ const USER_COOKIE = "user";
 
 // Cookie options for secure storage
 // secure: true only when HTTPS is actually used (not in local Docker)
+// sameSite: "strict" provides better CSRF protection than "lax"
 const cookieOptions = {
   httpOnly: true,
-  secure: false, // Set to true only when using HTTPS
-  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production", // true in production (HTTPS)
+  sameSite: "strict" as const, // Strict CSRF protection - cookies only sent in same-site context
   maxAge: 60 * 60 * 24 * 7, // 7 days
   path: "/",
 };
