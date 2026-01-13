@@ -8,6 +8,7 @@ import {
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AppLogger } from "../logger/logger.service";
+import { HttpExceptionResponse } from "../types";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -28,7 +29,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getResponse()
         : "Internal server error";
 
-    const errorMessage = typeof message === "string" ? message : (message as any).message;
+    const errorMessage = typeof message === "string" 
+      ? message 
+      : (message as HttpExceptionResponse).message || String(message);
 
     // Log error (only log server errors, not client errors like 400, 401, 404)
     if (status >= 500) {

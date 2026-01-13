@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
+import { KnowledgeDocumentWhereInput } from "../common/types";
 
 @Injectable()
 export class KnowledgeService {
@@ -39,7 +40,7 @@ export class KnowledgeService {
       throw new BadRequestException("Offset must be non-negative");
     }
 
-    const filters: any = {
+    const filters: KnowledgeDocumentWhereInput = {
       deletedAt: null,
       ...(categoryId && { categoryId }),
     };

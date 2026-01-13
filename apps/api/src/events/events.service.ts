@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
+import { TaskEventWhereInput, SystemEventMetadata } from "../common/types";
 
 @Injectable()
 export class EventsService {
@@ -27,7 +28,7 @@ export class EventsService {
       throw new BadRequestException("Offset must be non-negative");
     }
 
-    const filters: any = { deletedAt: null };
+    const filters: TaskEventWhereInput = { deletedAt: null };
 
     if (type) {
       filters.type = type.trim();
@@ -107,7 +108,7 @@ export class EventsService {
     });
   }
 
-  async createSystemEvent(type: string, message: string, metadata?: any) {
+  async createSystemEvent(type: string, message: string, metadata?: SystemEventMetadata) {
     return this.prisma.systemEvent.create({
       data: {
         type,

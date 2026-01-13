@@ -10,6 +10,7 @@ import { Inject } from "@nestjs/common";
 import { Server, Socket } from "socket.io";
 import { EventsService } from "../events/events.service";
 import { AppLogger } from "../common/logger/logger.service";
+import { TaskEventData, SystemEventData } from "../common/types";
 
 @WSGateway({
   cors: {
@@ -65,12 +66,12 @@ export class WebSocketGateway
   }
 
   // Broadcast new task event to all connected clients
-  broadcastTaskEvent(event: any) {
+  broadcastTaskEvent(event: TaskEventData) {
     this.server.emit("task-event", event);
   }
 
   // Broadcast new system event to all connected clients
-  broadcastSystemEvent(event: any) {
+  broadcastSystemEvent(event: SystemEventData) {
     this.server.emit("system-event", event);
   }
 }

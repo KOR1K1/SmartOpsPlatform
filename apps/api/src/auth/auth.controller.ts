@@ -15,6 +15,7 @@ import { RefreshTokenDto } from "./dto/refresh-token.dto";
 import { Public } from "../common/decorators/public.decorator";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { AppLogger } from "../common/logger/logger.service";
+import { AuthenticatedRequest } from "../common/types";
 
 @Controller("auth")
 export class AuthController {
@@ -40,7 +41,7 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
-  async refresh(@Request() req: any, @Body() refreshTokenDto: RefreshTokenDto) {
+  async refresh(@Request() req: AuthenticatedRequest, @Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(req.user.userId);
   }
 }
