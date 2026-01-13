@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { Injectable, NotFoundException, BadRequestException, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Injectable()
 export class KnowledgeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   async getCategories() {
     return this.prisma.knowledgeCategory.findMany({

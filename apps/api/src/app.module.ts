@@ -9,11 +9,13 @@ import { AnalyticsModule } from "./analytics/analytics.module";
 import { KnowledgeModule } from "./knowledge/knowledge.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { WebSocketModule } from "./websocket/websocket.module";
+import { LoggerModule } from "./common/logger/logger.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 
 @Module({
   imports: [
+    LoggerModule,
     PrismaModule,
     AuthModule,
     UsersModule,

@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Request,
+  Inject,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
@@ -13,10 +14,14 @@ import { RegisterDto } from "./dto/register.dto";
 import { RefreshTokenDto } from "./dto/refresh-token.dto";
 import { Public } from "../common/decorators/public.decorator";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   @Public()
   @Post("register")

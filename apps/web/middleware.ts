@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { logger } from "./lib/logger";
 
 // Protected routes that require authentication
 const protectedRoutes = ["/dashboard", "/events", "/knowledge", "/profile"];
@@ -38,9 +39,11 @@ function getJwtSecret(): Uint8Array {
   if (process.env.NODE_ENV === "production" && 
       (secret === "your-secret-key-change-in-production" || 
        secret.length < 32)) {
-    console.error(
-      "⚠️  SECURITY WARNING: JWT_SECRET appears to be weak or default. " +
-      "Please use a strong, randomly generated secret (minimum 32 characters)."
+    logger.warn(
+      "SECURITY WARNING: JWT_SECRET appears to be weak or default. Please use a strong, randomly generated secret (minimum 32 characters).",
+      "Middleware",
+      undefined,
+      { secretLength: secret.length }
     );
   }
   

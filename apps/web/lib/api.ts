@@ -7,6 +7,7 @@ import { env } from "./env";
 import { getAccessToken } from "./auth-cookies";
 import { refreshToken as refreshTokenApi } from "./auth-api";
 import { getRefreshToken, updateAccessToken } from "./auth-cookies";
+import { logger } from "./logger";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -337,7 +338,7 @@ export async function fetchEventsClient(
     const data = await response.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Error fetching events:", error);
+    logger.error("Error fetching events", error, "API");
     return [];
   }
 }

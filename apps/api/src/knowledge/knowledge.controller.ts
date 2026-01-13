@@ -6,15 +6,20 @@ import {
   ParseIntPipe,
   UseGuards,
   BadRequestException,
+  Inject,
 } from "@nestjs/common";
 import { KnowledgeService } from "./knowledge.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { SearchQueryDto } from "../common/dto/pagination-query.dto";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Controller("knowledge")
 @UseGuards(JwtAuthGuard)
 export class KnowledgeController {
-  constructor(private readonly knowledgeService: KnowledgeService) {}
+  constructor(
+    private readonly knowledgeService: KnowledgeService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   @Get("categories")
   getCategories() {

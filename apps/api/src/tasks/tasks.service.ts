@@ -1,16 +1,20 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateTaskDto } from "./dto/create-task.dto";
+import { AppLogger } from "../common/logger/logger.service";
 
 // Type alias for backward compatibility
 type CreateTaskInput = CreateTaskDto;
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   async createTask(data: CreateTaskInput, userId?: number | null) {
-    console.log("[TasksService] createTask called:", { data, userId });
+    this.logger.debug(`Creating task for user ${userId}`, "TasksService");
     
     // Validate title
     if (!data.title?.trim()) {
@@ -37,7 +41,7 @@ export class TasksService {
       throw new BadRequestException(`Status must be one of: ${validStatuses.join(", ")}`);
     }
 
-    console.log("[TasksService] Creating task with status:", status);
+    this.logger.debug(`Creating task with status: ${status}`, "TasksService");
 
     const task = await this.prisma.task.create({
       data: {
@@ -57,7 +61,7 @@ export class TasksService {
       },
     });
 
-    console.log("[TasksService] Task created:", task.id);
+    this.logger.log(`Task created successfully: ${task.id}`, "TasksService");
 
     // Create corresponding task event
     await this.prisma.taskEvent.create({
@@ -69,7 +73,7 @@ export class TasksService {
       },
     });
 
-    console.log("[TasksService] Task event created for task:", task.id);
+    this.logger.debug(`Task event created for task: ${task.id}`, "TasksService");
     return task;
   }
 }

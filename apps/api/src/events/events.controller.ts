@@ -3,15 +3,20 @@ import {
   Get,
   Query,
   UseGuards,
+  Inject,
 } from "@nestjs/common";
 import { EventsService } from "./events.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { EventsQueryDto, PaginationQueryDto } from "../common/dto/pagination-query.dto";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Controller("events")
 @UseGuards(JwtAuthGuard)
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   @Get("tasks")
   getTaskEvents(@Query() query: EventsQueryDto) {

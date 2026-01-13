@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/auth-cookies";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 /**
  * API route to proxy events requests from Client Components
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error proxying events request:", error);
+    logger.error("Error proxying events request", error, "EventsAPI");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

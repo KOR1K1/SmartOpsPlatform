@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  Inject,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import type { SignOptions } from "jsonwebtoken";
@@ -10,20 +11,25 @@ import { PrismaService } from "../prisma/prisma.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { env } from "../config/env";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    @Inject(AppLogger) private readonly logger: AppLogger
   ) {}
 
   async register(registerDto: RegisterDto) {
+    this.logger.debug(`Registration attempt for email: ${registerDto.email}`, "AuthService");
+    
     const existingUser = await this.prisma.user.findUnique({
       where: { email: registerDto.email },
     });
 
     if (existingUser) {
+      this.logger.warn(`Registration failed: email already exists - ${registerDto.email}`, "AuthService");
       throw new ConflictException("User with this email already exists");
     }
 
@@ -50,6 +56,8 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user.id, user.email, user.role.name);
 
+    this.logger.log(`User registered successfully: ${user.email} (ID: ${user.id})`, "AuthService");
+
     return {
       user: {
         id: user.id,
@@ -62,12 +70,15 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    this.logger.debug(`Login attempt for email: ${loginDto.email}`, "AuthService");
+    
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
       include: { role: true },
     });
 
     if (!user || user.deletedAt) {
+      this.logger.warn(`Login failed: user not found or deleted - ${loginDto.email}`, "AuthService");
       throw new UnauthorizedException("Invalid credentials");
     }
 
@@ -77,10 +88,13 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
+      this.logger.warn(`Login failed: invalid password - ${loginDto.email}`, "AuthService");
       throw new UnauthorizedException("Invalid credentials");
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role.name);
+
+    this.logger.log(`User logged in successfully: ${user.email} (ID: ${user.id})`, "AuthService");
 
     return {
       user: {
@@ -94,15 +108,18 @@ export class AuthService {
   }
 
   async refreshToken(userId: number) {
+    this.logger.debug(`Token refresh request for user ID: ${userId}`, "AuthService");
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { role: true },
     });
 
     if (!user || user.deletedAt) {
+      this.logger.warn(`Token refresh failed: user not found or deleted - ID: ${userId}`, "AuthService");
       throw new UnauthorizedException("User not found");
     }
 
+    this.logger.debug(`Token refreshed successfully for user ID: ${userId}`, "AuthService");
     return this.generateTokens(user.id, user.email, user.role.name);
   }
 

@@ -6,9 +6,10 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from "@nestjs/websockets";
+import { Inject } from "@nestjs/common";
 import { Server, Socket } from "socket.io";
-import { Logger } from "@nestjs/common";
 import { EventsService } from "../events/events.service";
+import { AppLogger } from "../common/logger/logger.service";
 
 @WSGateway({
   cors: {
@@ -22,33 +23,34 @@ export class WebSocketGateway
   @WebSocketServer()
   server: Server;
 
-  private logger: Logger = new Logger("WebSocketGateway");
-
-  constructor(private eventsService: EventsService) {}
+  constructor(
+    private eventsService: EventsService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   afterInit(server: Server) {
-    this.logger.log("WebSocket Gateway initialized");
+    this.logger.log("WebSocket Gateway initialized", "WebSocketGateway");
   }
 
   handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+    this.logger.debug(`Client connected: ${client.id}`, "WebSocketGateway");
     // Send initial events
     this.sendRecentEvents(client);
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+    this.logger.debug(`Client disconnected: ${client.id}`, "WebSocketGateway");
   }
 
   @SubscribeMessage("subscribe:events")
   handleSubscribeEvents(client: Socket) {
-    this.logger.log(`Client ${client.id} subscribed to events`);
+    this.logger.debug(`Client ${client.id} subscribed to events`, "WebSocketGateway");
     this.sendRecentEvents(client);
   }
 
   @SubscribeMessage("subscribe:system-events")
   handleSubscribeSystemEvents(client: Socket) {
-    this.logger.log(`Client ${client.id} subscribed to system events`);
+    this.logger.debug(`Client ${client.id} subscribed to system events`, "WebSocketGateway");
     this.sendRecentSystemEvents(client);
   }
 

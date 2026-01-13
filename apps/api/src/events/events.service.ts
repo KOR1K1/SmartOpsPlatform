@@ -1,9 +1,13 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Injectable()
 export class EventsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   async getTaskEvents(limit = 50, offset = 0, q?: string, type?: string) {
     // Validate and sanitize inputs

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 export default function KnowledgeError({
   error,
@@ -10,7 +11,7 @@ export default function KnowledgeError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Knowledge error:", error);
+    logger.error("Knowledge error", error, "KnowledgeError");
   }, [error]);
 
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_API_URL ||
       "http://api:4000";
 
-    console.log("[API /tasks] Forwarding to backend:", {
+    logger.debug("[API /tasks] Forwarding to backend", "TasksAPI", {
       apiUrl,
       hasToken: !!accessToken,
     });
@@ -37,11 +38,16 @@ export async function POST(request: Request) {
     const text = await apiResponse.text();
 
     if (!apiResponse.ok) {
-      console.error("[API /tasks] Backend error:", {
-        status: apiResponse.status,
-        statusText: apiResponse.statusText,
-        text,
-      });
+      logger.error(
+        "[API /tasks] Backend error",
+        new Error(`Backend returned ${apiResponse.status}: ${apiResponse.statusText}`),
+        "TasksAPI",
+        {
+          status: apiResponse.status,
+          statusText: apiResponse.statusText,
+          text,
+        }
+      );
       return NextResponse.json(
         {
           error:
@@ -59,14 +65,14 @@ export async function POST(request: Request) {
       result = {};
     }
 
-    console.log("[API /tasks] Backend created task:", result);
+    logger.info("[API /tasks] Backend created task", "TasksAPI", { taskId: (result as { id?: number })?.id });
 
     // Revalidate dashboard cache to show new task
     revalidatePath("/dashboard");
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[API /tasks] Error:", error);
+    logger.error("[API /tasks] Error", error, "TasksAPI");
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create task" },
       { status: 500 }

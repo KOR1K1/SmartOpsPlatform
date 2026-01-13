@@ -1,9 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { AppLogger } from "../common/logger/logger.service";
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(AppLogger) private readonly logger: AppLogger
+  ) {}
 
   async getDashboardStats() {
     const [totalTasks, activeTasks, totalUsers, totalEvents, totalDocuments] =

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 export interface User {
   id: number;
@@ -49,7 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Only log non-200 errors (but not 401 which we handle above)
         if (response.status !== 401) {
-          console.error("Failed to fetch user:", response.status, response.statusText);
+          logger.error(
+            "Failed to fetch user",
+            new Error(`HTTP ${response.status}: ${response.statusText}`),
+            "AuthContext"
+          );
         }
         setUser(null);
       }
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push("/login");
       router.refresh();
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error", error, "AuthContext");
       // Force redirect even if API call fails
       router.push("/login");
     }

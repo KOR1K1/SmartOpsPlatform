@@ -5,6 +5,8 @@
 
 "use client";
 
+import { logger } from "./logger";
+
 /**
  * Client-side logout function
  * Calls server action to clear cookies and redirects to login
@@ -20,7 +22,7 @@ export async function clientLogout() {
       window.location.href = "/login";
     }
   } catch (error) {
-    console.error("Logout error:", error);
+    logger.error("Logout error", error, "AuthClient");
     // Force redirect even if API call fails
     window.location.href = "/login";
   }
