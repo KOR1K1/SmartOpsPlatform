@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import dynamicImport from "next/dynamic";
+import { Suspense } from "react";
 import { fetchAnalytics } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingText } from "@/components/shared/loading-skeleton";
 
 // Lazy load MetricCard to reduce initial bundle size
 const MetricCard = dynamicImport(
@@ -156,15 +158,48 @@ export default async function DashboardPage() {
       {/* Quick Actions and Charts - Load charts after metrics for better LCP */}
       {/* Use Suspense to defer non-critical content and improve LCP */}
       <div className="grid gap-4 mt-6 md:grid-cols-3">
-        <QuickActions />
+        <Suspense fallback={
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LoadingText text="Loading actions..." />
+            </CardContent>
+          </Card>
+        }>
+          <QuickActions />
+        </Suspense>
         <div className="md:col-span-2 grid gap-4">
           {/* Defer chart rendering to improve LCP - render after initial paint */}
           {analytics.tasksByStatus.length > 0 && (
-            <div className="min-h-[200px]">
-              <TasksChart data={analytics.tasksByStatus} />
-            </div>
+            <Suspense fallback={
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tasks by Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LoadingText text="Loading chart..." />
+                </CardContent>
+              </Card>
+            }>
+              <div className="min-h-[200px]">
+                <TasksChart data={analytics.tasksByStatus} />
+              </div>
+            </Suspense>
           )}
-          <RecentEventsTable events={analytics.recentEvents} />
+          <Suspense fallback={
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Events</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LoadingText text="Loading events..." />
+              </CardContent>
+            </Card>
+          }>
+            <RecentEventsTable events={analytics.recentEvents} />
+          </Suspense>
         </div>
       </div>
     </main>

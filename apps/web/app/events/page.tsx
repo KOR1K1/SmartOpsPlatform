@@ -9,6 +9,7 @@ import { EventsFilters } from "@/components/events/events-filters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, Archive } from "lucide-react";
+import { PageHeaderSkeleton, EventCardSkeleton } from "@/components/shared/loading-skeleton";
 
 type Event = {
   id: number;
@@ -179,8 +180,14 @@ export default function EventsPage() {
   if (loading) {
     return (
       <main className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading events...</p>
+        <PageHeaderSkeleton />
+        <div className="mb-6">
+          <div className="h-10 w-full max-w-md animate-pulse rounded-md bg-muted" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <EventCardSkeleton key={i} />
+          ))}
         </div>
       </main>
     );

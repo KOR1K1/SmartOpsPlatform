@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { User, Mail, Shield, Calendar, Settings } from "lucide-react";
+import { PageHeaderSkeleton } from "@/components/shared/loading-skeleton";
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
@@ -13,8 +14,31 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading profile...</p>
+        <PageHeaderSkeleton />
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <div className="h-6 w-24 animate-pulse rounded bg-muted" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="h-24 w-24 rounded-full animate-pulse bg-muted" />
+                <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+                <div className="h-6 w-20 animate-pulse rounded bg-muted" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-16 w-full animate-pulse rounded-lg bg-muted" />
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
