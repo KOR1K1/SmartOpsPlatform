@@ -16,6 +16,7 @@ import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
 import { RequestIdMiddleware } from "./common/middleware/request-id.middleware";
 import { CsrfMiddleware } from "./common/middleware/csrf.middleware";
 import { TimeoutInterceptor } from "./common/interceptors/timeout.interceptor";
+import { DateSerializerInterceptor } from "./common/interceptors/date-serializer.interceptor";
 
 @Module({
   imports: [
@@ -53,6 +54,10 @@ import { TimeoutInterceptor } from "./common/interceptors/timeout.interceptor";
     {
       provide: APP_INTERCEPTOR,
       useClass: TimeoutInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: DateSerializerInterceptor,
     },
   ],
 })

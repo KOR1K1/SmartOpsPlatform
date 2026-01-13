@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatDateTime } from "@/lib/date-utils";
 
 interface RecentEventsTableProps {
   events: Array<{
@@ -35,10 +36,8 @@ export function RecentEventsTable({ events }: RecentEventsTableProps) {
       // During SSR, return a simple format to avoid hydration mismatch
       return new Date(dateString).toISOString().split('T')[0];
     }
-    return new Date(dateString).toLocaleString("en-US", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
+    // Use standardized date formatting utility
+    return formatDateTime(dateString);
   };
 
   if (events.length === 0) {

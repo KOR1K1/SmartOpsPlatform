@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, Archive } from "lucide-react";
 import { PageHeaderSkeleton, EventCardSkeleton } from "@/components/shared/loading-skeleton";
+import { formatDateTime, getDateRanges } from "@/lib/date-utils";
 
 type Event = {
   id: number;
@@ -149,12 +150,7 @@ export default function EventsPage() {
   }, [events, searchQuery, selectedType]);
 
   const groupedEvents = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
+    const { today, yesterday, weekAgo } = getDateRanges();
 
     const todayEvents: Event[] = [];
     const yesterdayEvents: Event[] = [];
@@ -309,10 +305,7 @@ function EventsList({ events }: { events: Event[] }) {
                 </div>
               </div>
               <time className="text-xs text-muted-foreground whitespace-nowrap" dateTime={event.createdAt}>
-                {new Date(event.createdAt).toLocaleString("en-US", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
+                {formatDateTime(event.createdAt)}
               </time>
             </div>
           </CardHeader>

@@ -9,9 +9,8 @@ import {
 } from "@nestjs/common";
 import { KnowledgeService } from "./knowledge.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { SearchQueryDto } from "../common/dto/pagination-query.dto";
+import { KnowledgeDocumentsQueryDto } from "../common/dto/pagination-query.dto";
 import { AppLogger } from "../common/logger/logger.service";
-import { ValidationException } from "../common/exceptions/validation.exception";
 import { validateStringLength } from "../common/utils/validation.utils";
 
 @Controller("knowledge")
@@ -29,26 +28,19 @@ export class KnowledgeController {
 
   @Get("documents")
   getDocuments(
-    @Query("categoryId") categoryId?: string,
-    @Query() pagination: SearchQueryDto = {}
+    @Query() query: KnowledgeDocumentsQueryDto = {}
   ) {
-    // Validate categoryId
-    let parsedCategoryId: number | undefined;
-    if (categoryId) {
-      const parsed = parseInt(categoryId, 10);
-      if (isNaN(parsed)) {
-        throw new ValidationException("categoryId must be a valid number", "categoryId");
-      }
-      parsedCategoryId = parsed;
-    }
-
     // Sanitize search query (validation is done by DTO)
-    const searchQuery = pagination.q?.trim();
+    const searchQuery = query.q?.trim();
+
+    // Ensure limit and offset are valid numbers
+    const limit = query.limit && query.limit > 0 ? query.limit : 50;
+    const offset = query.offset && query.offset >= 0 ? query.offset : 0;
 
     return this.knowledgeService.getDocuments(
-      parsedCategoryId,
-      pagination.limit || 50,
-      pagination.offset || 0,
+      query.categoryId,
+      limit,
+      offset,
       searchQuery
     );
   }

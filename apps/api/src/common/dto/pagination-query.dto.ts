@@ -23,6 +23,14 @@ export class SearchQueryDto extends PaginationQueryDto {
   q?: string;
 }
 
+export class KnowledgeDocumentsQueryDto extends SearchQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: "categoryId must be an integer" })
+  @Min(1, { message: "categoryId must be at least 1" })
+  categoryId?: number;
+}
+
 export class EventsQueryDto extends SearchQueryDto {
   @IsOptional()
   @IsString()

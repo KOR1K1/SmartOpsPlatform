@@ -463,7 +463,8 @@ export interface PaginatedDocumentsResponse {
 }
 
 /**
- * Fetch knowledge documents from API
+ * Fetch knowledge documents from API (Server Component version)
+ * Use fetchKnowledgeDocumentsClient for Client Components
  * @param limit - Number of documents to fetch (default: 20)
  * @param offset - Number of documents to skip (default: 0)
  * @param categoryId - Optional category ID to filter by
@@ -515,6 +516,90 @@ export async function fetchKnowledgeDocuments(
     };
   } catch (error) {
     // Return empty paginated response if API is unavailable
+    return {
+      data: [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+      },
+    };
+  }
+}
+
+/**
+ * Client-side version of fetchKnowledgeDocuments
+ * For use in Client Components ("use client")
+ * Uses Next.js API route as proxy to access httpOnly cookies securely
+ */
+export async function fetchKnowledgeDocumentsClient(
+  limit = 20,
+  offset = 0,
+  categoryId?: number | null,
+  search?: string
+): Promise<PaginatedDocumentsResponse> {
+  try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      offset: offset.toString(),
+    });
+
+    if (categoryId !== null && categoryId !== undefined) {
+      params.append("categoryId", categoryId.toString());
+    }
+
+    if (search) {
+      params.append("q", search);
+    }
+
+    // Use Next.js API route as proxy (handles httpOnly cookies)
+    const response = await fetch(`/api/knowledge?${params.toString()}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Unauthorized - redirect to login
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        return {
+          data: [],
+          pagination: {
+            page: Math.floor(offset / limit) + 1,
+            limit,
+            total: 0,
+            totalPages: 0,
+            hasMore: false,
+          },
+        };
+      }
+      throw new Error(`Failed to fetch knowledge documents: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    // Handle both new paginated format and legacy array format
+    if (result && result.data && result.pagination) {
+      return result;
+    }
+    
+    // Fallback for backward compatibility
+    return {
+      data: Array.isArray(result) ? result : [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: Array.isArray(result) ? result.length : 0,
+        totalPages: 1,
+        hasMore: false,
+      },
+    };
+  } catch (error) {
+    logger.error("Error fetching knowledge documents", error, "API");
     return {
       data: [],
       pagination: {

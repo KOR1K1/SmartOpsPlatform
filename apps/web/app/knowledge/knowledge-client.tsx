@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { fetchKnowledgeDocuments } from "@/lib/api";
+import { fetchKnowledgeDocumentsClient } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KnowledgeSearch } from "@/components/knowledge/knowledge-search";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, BookOpen, Clock } from "lucide-react";
 import Link from "next/link";
 import { PageHeaderSkeleton, DocumentCardSkeleton } from "@/components/shared/loading-skeleton";
+import { formatDateOnly, compareDates } from "@/lib/date-utils";
 
 type Document = {
   id: number;
@@ -54,7 +55,7 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
         setLoading(true);
         // Use larger limit when searching to find more results
         const limit = searchQuery ? 150 : ITEMS_PER_PAGE;
-        const response = await fetchKnowledgeDocuments(
+        const response = await fetchKnowledgeDocumentsClient(
           limit,
           0,
           selectedCategoryId,
@@ -78,7 +79,7 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
     
     try {
       setLoadingMore(true);
-      const response = await fetchKnowledgeDocuments(
+      const response = await fetchKnowledgeDocumentsClient(
         ITEMS_PER_PAGE,
         documents.length,
         selectedCategoryId,
@@ -98,67 +99,22 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
   }
 
   const filteredDocuments = useMemo(() => {
-    let filtered = documents;
-
-    // Only filter by search query on client (category filtering is done on server)
-    if (searchQuery) {
-      const query = searchQuery.trim().toLowerCase();
-      // Split query into words for better search
-      const searchWords = query.split(/\s+/).filter(word => word.length > 0);
-      
-      // Check if query is a number (for ID search)
-      const isNumericQuery = /^\d+$/.test(query.trim());
-      const numericId = isNumericQuery ? parseInt(query.trim(), 10) : null;
-      
-      filtered = filtered.filter((doc) => {
-        // Check ID if query is numeric
-        if (numericId !== null && doc.id === numericId) {
-          return true;
-        }
-        
-        // Search by words (all words must be found - AND logic)
-        if (searchWords.length > 0) {
-          const searchableText = [
-            doc.title,
-            doc.content,
-            doc.category?.title || "",
-            doc.slug,
-            doc.id.toString(), // Also search by ID as string
-          ]
-            .join(" ")
-            .toLowerCase();
-          
-          // All words must be present
-          return searchWords.every(word => searchableText.includes(word));
-        }
-        
-        // Fallback to simple substring search
-        const searchableText = [
-          doc.title,
-          doc.content,
-          doc.category?.title || "",
-          doc.slug,
-          doc.id.toString(),
-        ]
-          .join(" ")
-          .toLowerCase();
-        
-        return searchableText.includes(query);
-      });
-    }
-
-    // Category filtering is done on server, but keep this for consistency
-    // (in case selectedCategoryId changes but documents haven't reloaded yet)
-    if (selectedCategoryId !== null) {
-      filtered = filtered.filter((doc) => doc.categoryId === selectedCategoryId);
-    }
-
-    return filtered;
-  }, [documents, searchQuery, selectedCategoryId]);
+    // Category filtering is done on server, so documents are already filtered
+    // Only apply client-side filtering for search query (if needed for additional refinement)
+    // But since search is also done on server, we can just return documents directly
+    // The only reason to filter here would be if we want to do additional client-side filtering
+    // For now, return documents as-is since server handles all filtering
+    
+    // If there's a search query, we might want to do additional client-side filtering
+    // but since search is handled on server, we'll just return the documents
+    // This ensures consistency - server filters by category and search, client displays results
+    
+    return documents;
+  }, [documents]);
 
   const recentDocuments = useMemo(() => {
     return [...documents]
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a, b) => compareDates(b.updatedAt, a.updatedAt))
       .slice(0, 5);
   }, [documents]);
 
@@ -251,7 +207,7 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
                     >
                       <p className="text-sm font-medium line-clamp-2">{doc.title}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(doc.updatedAt).toLocaleDateString()}
+                        {formatDateOnly(doc.updatedAt)}
                       </p>
                     </Link>
                   ))}
@@ -299,7 +255,7 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <time className="text-xs text-muted-foreground whitespace-nowrap" dateTime={doc.updatedAt}>
-                            {new Date(doc.updatedAt).toLocaleDateString()}
+                            {formatDateOnly(doc.updatedAt)}
                           </time>
                           <Button variant="outline" size="sm" asChild>
                             <Link 

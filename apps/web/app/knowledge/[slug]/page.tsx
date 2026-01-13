@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, FileText, Tag } from "lucide-react";
 import Link from "next/link";
+import { formatDateLong, formatDateOnly } from "@/lib/date-utils";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -60,11 +61,7 @@ export default async function KnowledgeDocumentPage({ params }: Props) {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <time dateTime={document.updatedAt}>
-              Updated {new Date(document.updatedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              Updated {formatDateLong(document.updatedAt)}
             </time>
           </div>
         </div>
@@ -101,13 +98,13 @@ export default async function KnowledgeDocumentPage({ params }: Props) {
             <div>
               <span className="font-medium text-muted-foreground">Created:</span>{" "}
               <time dateTime={document.createdAt}>
-                {new Date(document.createdAt).toLocaleDateString()}
+                {formatDateOnly(document.createdAt)}
               </time>
             </div>
             <div>
               <span className="font-medium text-muted-foreground">Last Updated:</span>{" "}
               <time dateTime={document.updatedAt}>
-                {new Date(document.updatedAt).toLocaleDateString()}
+                {formatDateOnly(document.updatedAt)}
               </time>
             </div>
           </CardContent>
@@ -125,7 +122,7 @@ export default async function KnowledgeDocumentPage({ params }: Props) {
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Version {version.version}</span>
                       <time className="text-muted-foreground text-xs" dateTime={version.createdAt}>
-                        {new Date(version.createdAt).toLocaleDateString()}
+                        {formatDateOnly(version.createdAt)}
                       </time>
                     </div>
                   </div>
