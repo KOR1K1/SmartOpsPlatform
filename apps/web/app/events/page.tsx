@@ -2,15 +2,17 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { fetchEventsClient } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EventsSearch } from "@/components/events/events-search";
 import { EventsFilters } from "@/components/events/events-filters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Clock, Calendar, Archive } from "lucide-react";
+import { Clock, Calendar, Archive, Activity, Search } from "lucide-react";
 import { PageHeaderSkeleton, EventCardSkeleton } from "@/components/shared/loading-skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateTime, getDateRanges } from "@/lib/date-utils";
+import { toast } from "@/lib/toast";
 
 type Event = {
   id: number;
@@ -83,6 +85,7 @@ export default function EventsPage() {
       }
     } catch (error) {
       setHasMore(false);
+      toast.error("Failed to load more events", "Please try again.");
     } finally {
       setLoadingMore(false);
     }
@@ -235,16 +238,16 @@ export default function EventsPage() {
         </TabsList>
 
         <TabsContent value="today" className="mt-6">
-          <EventsList events={groupedEvents.todayEvents} />
+          <EventsList events={groupedEvents.todayEvents} searchQuery={searchQuery} selectedType={selectedType} />
         </TabsContent>
         <TabsContent value="yesterday" className="mt-6">
-          <EventsList events={groupedEvents.yesterdayEvents} />
+          <EventsList events={groupedEvents.yesterdayEvents} searchQuery={searchQuery} selectedType={selectedType} />
         </TabsContent>
         <TabsContent value="week" className="mt-6">
-          <EventsList events={groupedEvents.weekEvents} />
+          <EventsList events={groupedEvents.weekEvents} searchQuery={searchQuery} selectedType={selectedType} />
         </TabsContent>
         <TabsContent value="older" className="mt-6">
-          <EventsList events={groupedEvents.olderEvents} />
+          <EventsList events={groupedEvents.olderEvents} searchQuery={searchQuery} selectedType={selectedType} />
         </TabsContent>
       </Tabs>
 
@@ -264,14 +267,18 @@ export default function EventsPage() {
   );
 }
 
-function EventsList({ events }: { events: Event[] }) {
+function EventsList({ events, searchQuery, selectedType }: { events: Event[]; searchQuery: string; selectedType: string | null }) {
   if (events.length === 0) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground text-center">No events found</p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        icon={searchQuery || selectedType ? Search : Activity}
+        title={searchQuery || selectedType ? "No events found" : "No events available"}
+        description={
+          searchQuery || selectedType
+            ? "Try adjusting your search or filter criteria to find events."
+            : "There are no events in the system yet. Events will appear here as they occur."
+        }
+      />
     );
   }
 

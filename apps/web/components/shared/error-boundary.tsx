@@ -48,8 +48,13 @@ export function ErrorBoundary({
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-sm text-muted-foreground">
-            {message || "An unexpected error occurred. Please try again."}
+            {message || "An unexpected error occurred. Please try again or contact support if the problem persists."}
           </p>
+          {error.digest && (
+            <p className="text-xs text-muted-foreground">
+              Error ID: {error.digest}
+            </p>
+          )}
           {error.message && (
             <details className="text-left">
               <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground mb-2">

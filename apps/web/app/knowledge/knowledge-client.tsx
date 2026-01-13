@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { KnowledgeSearch } from "@/components/knowledge/knowledge-search";
 import { CategoryFilter } from "@/components/knowledge/category-filter";
 import { Button } from "@/components/ui/button";
-import { FileText, BookOpen, Clock } from "lucide-react";
+import { FileText, BookOpen, Clock, Search } from "lucide-react";
 import Link from "next/link";
 import { PageHeaderSkeleton, DocumentCardSkeleton } from "@/components/shared/loading-skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
 import { formatDateOnly, compareDates } from "@/lib/date-utils";
+import { toast } from "@/lib/toast";
 
 type Document = {
   id: number;
@@ -67,6 +69,7 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
       } catch (error) {
         setDocuments([]);
         setHasMore(false);
+        toast.error("Failed to load documents", "Please try again or refresh the page.");
       } finally {
         setLoading(false);
       }
@@ -93,6 +96,7 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
       }
     } catch (error) {
       setHasMore(false);
+      toast.error("Failed to load more documents", "Please try again.");
     } finally {
       setLoadingMore(false);
     }
@@ -220,18 +224,19 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
         {/* Main content */}
         <div className="lg:col-span-3">
           {filteredDocuments.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">
-                    {searchQuery || selectedCategoryId
-                      ? "No documents match your filters"
-                      : "No knowledge documents available"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={searchQuery || selectedCategoryId ? Search : FileText}
+              title={
+                searchQuery || selectedCategoryId
+                  ? "No documents found"
+                  : "No documents available"
+              }
+              description={
+                searchQuery || selectedCategoryId
+                  ? "Try adjusting your search or filter criteria to find what you're looking for."
+                  : "There are no knowledge documents in the system yet. Check back later or contact your administrator."
+              }
+            />
           ) : (
             <>
               <div className="space-y-4">

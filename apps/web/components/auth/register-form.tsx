@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { register } from "@/lib/auth-api";
 import { setAuthTokensAction } from "@/lib/auth-actions";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -55,13 +56,14 @@ export function RegisterForm() {
           response.refreshToken,
           response.user
         );
+        toast.success("Account created successfully", "Welcome! Redirecting to dashboard...");
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to register. Please try again."
-      );
+      const errorMessage = err instanceof Error
+        ? err.message
+        : "Failed to register. Please check your information and try again.";
+      setError(errorMessage);
+      toast.error("Registration failed", errorMessage);
     } finally {
       setIsLoading(false);
     }

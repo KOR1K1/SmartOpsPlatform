@@ -1,6 +1,28 @@
 import type { Metadata } from "next";
+import dynamicImport from "next/dynamic";
 import { fetchKnowledgeCategories } from "@/lib/api";
-import { KnowledgeClient } from "./knowledge-client";
+import { Suspense } from "react";
+import { PageHeaderSkeleton } from "@/components/shared/loading-skeleton";
+
+// Lazy load KnowledgeClient to reduce initial bundle size
+const KnowledgeClient = dynamicImport(() => import("./knowledge-client").then((mod) => ({ default: mod.KnowledgeClient })), {
+  ssr: true,
+  loading: () => (
+    <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <PageHeaderSkeleton />
+      <div className="grid gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-1">
+          <div className="h-64 animate-pulse rounded-lg bg-muted" />
+        </div>
+        <div className="lg:col-span-3 space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
+      </div>
+    </div>
+  ),
+});
 
 export const metadata: Metadata = {
   title: "Knowledge Hub",
@@ -34,5 +56,23 @@ export default async function KnowledgePage() {
     categories = [];
   }
 
-  return <KnowledgeClient initialCategories={categories} />;
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <PageHeaderSkeleton />
+        <div className="grid gap-6 lg:grid-cols-4">
+          <div className="lg:col-span-1">
+            <div className="h-64 animate-pulse rounded-lg bg-muted" />
+          </div>
+          <div className="lg:col-span-3 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-32 animate-pulse rounded-lg bg-muted" />
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <KnowledgeClient initialCategories={categories} />
+    </Suspense>
+  );
 }

@@ -7,6 +7,7 @@ import * as z from "zod";
 import { login } from "@/lib/auth-api";
 import { setAuthTokensAction } from "@/lib/auth-actions";
 import { useAuth } from "@/contexts/auth-context";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -59,13 +60,18 @@ export function LoginForm() {
           response.refreshToken,
           response.user
         );
+        toast.success("Login successful", "Welcome back!");
       } else {
-        setError("Invalid response from server");
+        const errorMsg = "Invalid response from server";
+        setError(errorMsg);
+        toast.error("Login failed", errorMsg);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to login. Please try again."
-      );
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : "Failed to login. Please check your credentials and try again.";
+      setError(errorMessage);
+      toast.error("Login failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
