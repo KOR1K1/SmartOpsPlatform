@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       hasToken: !!accessToken,
     });
 
-    const apiResponse = await fetchWithTimeout(`${apiUrl}/tasks`, {
+    const apiResponse = await fetchWithTimeout(`${apiUrl}/api/v1/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

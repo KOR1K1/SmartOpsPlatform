@@ -39,7 +39,7 @@ export interface RefreshTokenResponse {
 export async function login(
   credentials: LoginCredentials
 ): Promise<AuthResponse> {
-  const response = await fetchWithTimeout(`${env.apiUrl}/auth/login`, {
+  const response = await fetchWithTimeout(`${env.apiUrl}/api/v1/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export async function login(
 export async function register(
   credentials: RegisterCredentials
 ): Promise<AuthResponse> {
-  const response = await fetchWithTimeout(`${env.apiUrl}/auth/register`, {
+  const response = await fetchWithTimeout(`${env.apiUrl}/api/v1/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -87,7 +87,7 @@ export async function register(
 export async function refreshToken(
   refreshToken: string
 ): Promise<RefreshTokenResponse> {
-  const response = await fetchWithTimeout(`${env.apiUrl}/auth/refresh`, {
+  const response = await fetchWithTimeout(`${env.apiUrl}/api/v1/auth/refresh`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

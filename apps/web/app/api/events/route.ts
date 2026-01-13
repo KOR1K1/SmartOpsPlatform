@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     // Make request to backend API
     const apiUrl = env.apiUrl;
-    const response = await fetchWithTimeout(`${apiUrl}/events/tasks?${params.toString()}`, {
+    const response = await fetchWithTimeout(`${apiUrl}/api/v1/events/tasks?${params.toString()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

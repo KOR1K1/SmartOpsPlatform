@@ -37,10 +37,20 @@ export async function fetchApi<T = unknown>(
 ): Promise<T> {
   const { method = "GET", headers = {}, body, cache, next } = options;
 
-  const url = `${env.apiUrl}${endpoint}`;
+  const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `${env.apiUrl}/api/v1${normalizedEndpoint}`;
 
   // Get access token from cookies
   const accessToken = await getAccessToken();
+  
+  // Log request details for debugging
+  logger.info(`[fetchApi] ${method} ${url}`, "fetchApi", {
+    endpoint,
+    normalizedEndpoint,
+    fullUrl: url,
+    apiUrl: env.apiUrl,
+    hasAccessToken: !!accessToken,
+  });
 
   // Prepare headers with Authorization if token exists
   const requestHeaders: Record<string, string> = {
@@ -226,11 +236,18 @@ export async function fetchAnalytics() {
 
     // Ensure result has the correct structure
     if (result && typeof result === 'object' && 'totals' in result) {
+      logger.info("[fetchAnalytics] Success", "fetchAnalytics", {
+        totals: result.totals,
+        tasksByStatusCount: result.tasksByStatus?.length || 0,
+        recentEventsCount: result.recentEvents?.length || 0,
+      });
       return result;
     }
+    logger.warn("[fetchAnalytics] Invalid result structure", "fetchAnalytics", { result });
     return defaultAnalytics;
   } catch (error) {
-    // Return defaults if API is unavailable or returns error
+    // Log error and return defaults if API is unavailable or returns error
+    logger.error("[fetchAnalytics] Error", error, "fetchAnalytics");
     return defaultAnalytics;
   }
 }
