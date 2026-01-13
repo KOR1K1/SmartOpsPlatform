@@ -96,3 +96,24 @@ export interface HttpExceptionResponse {
   error?: string;
   statusCode?: number;
 }
+
+/**
+ * Pagination metadata structure
+ * Provides information about pagination state
+ */
+export interface PaginationMetadata {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+/**
+ * Paginated response structure
+ * Standard format for all paginated list endpoints
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationMetadata;
+}

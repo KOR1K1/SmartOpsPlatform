@@ -253,9 +253,39 @@ export async function fetchAnalytics() {
 }
 
 /**
+ * Paginated response type for events
+ */
+export interface PaginatedEventsResponse {
+  data: Array<{
+    id: number;
+    type: string;
+    message: string;
+    createdAt: string;
+    task?: {
+      id: number;
+      title: string;
+      status: string;
+    };
+    user?: {
+      id: number;
+      name: string;
+      email: string;
+    };
+  }>;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}
+
+/**
  * Fetch events from API
  * @param limit - Number of events to fetch (default: 20)
  * @param offset - Number of events to skip (default: 0)
+ * @returns Paginated response with events and pagination metadata
  */
 /**
  * Fetch events - Server Component version
@@ -266,7 +296,7 @@ export async function fetchEvents(
   offset = 0,
   search?: string,
   type?: string
-) {
+): Promise<PaginatedEventsResponse> {
   try {
     const params = new URLSearchParams({
       limit: limit.toString(),
@@ -281,32 +311,43 @@ export async function fetchEvents(
       params.append("type", type);
     }
 
-    const result = await fetchApi<Array<{
-      id: number;
-      type: string;
-      message: string;
-      createdAt: string;
-      task?: {
-        id: number;
-        title: string;
-        status: string;
-      };
-      user?: {
-        id: number;
-        name: string;
-        email: string;
-      };
-    }>>(`/events/tasks?${params.toString()}`, {
-      next: {
-        revalidate: 30, // Revalidate every 30 seconds
+    const result = await fetchApi<PaginatedEventsResponse>(
+      `/events/tasks?${params.toString()}`,
+      {
+        next: {
+          revalidate: 30, // Revalidate every 30 seconds
+        },
+      }
+    );
+
+    // Ensure we return valid paginated response
+    if (result && result.data && result.pagination) {
+      return result;
+    }
+
+    // Fallback for backward compatibility or API errors
+    return {
+      data: Array.isArray(result) ? result : [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: Array.isArray(result) ? result.length : 0,
+        totalPages: 1,
+        hasMore: false,
       },
-    });
-    // Ensure we return an array
-    return Array.isArray(result) ? result : [];
+    };
   } catch (error) {
-    // Return empty array if API is unavailable
-    // Errors are handled gracefully by Next.js during build
-    return [];
+    // Return empty paginated response if API is unavailable
+    return {
+      data: [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+      },
+    };
   }
 }
 
@@ -320,22 +361,7 @@ export async function fetchEventsClient(
   offset = 0,
   search?: string,
   type?: string
-): Promise<Array<{
-  id: number;
-  type: string;
-  message: string;
-  createdAt: string;
-  task?: {
-    id: number;
-    title: string;
-    status: string;
-  };
-  user?: {
-    id: number;
-    name: string;
-    email: string;
-  };
-}>> {
+): Promise<PaginatedEventsResponse> {
   try {
     const params = new URLSearchParams({
       limit: limit.toString(),
@@ -362,17 +388,78 @@ export async function fetchEventsClient(
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }
-        return [];
+        return {
+          data: [],
+          pagination: {
+            page: Math.floor(offset / limit) + 1,
+            limit,
+            total: 0,
+            totalPages: 0,
+            hasMore: false,
+          },
+        };
       }
       throw new Error(`Failed to fetch events: ${response.status}`);
     }
 
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    const result = await response.json();
+    
+    // Handle both new paginated format and legacy array format
+    if (result && result.data && result.pagination) {
+      return result;
+    }
+    
+    // Fallback for backward compatibility
+    return {
+      data: Array.isArray(result) ? result : [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: Array.isArray(result) ? result.length : 0,
+        totalPages: 1,
+        hasMore: false,
+      },
+    };
   } catch (error) {
     logger.error("Error fetching events", error, "API");
-    return [];
+    return {
+      data: [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+      },
+    };
   }
+}
+
+/**
+ * Paginated response type for knowledge documents
+ */
+export interface PaginatedDocumentsResponse {
+  data: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    content: string;
+    categoryId: number;
+    category: {
+      id: number;
+      title: string;
+      slug: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
 }
 
 /**
@@ -380,13 +467,14 @@ export async function fetchEventsClient(
  * @param limit - Number of documents to fetch (default: 20)
  * @param offset - Number of documents to skip (default: 0)
  * @param categoryId - Optional category ID to filter by
+ * @returns Paginated response with documents and pagination metadata
  */
 export async function fetchKnowledgeDocuments(
   limit = 20,
   offset = 0,
   categoryId?: number | null,
   search?: string
-) {
+): Promise<PaginatedDocumentsResponse> {
   try {
     const params = new URLSearchParams({
       limit: limit.toString(),
@@ -400,30 +488,43 @@ export async function fetchKnowledgeDocuments(
       params.append("q", search);
     }
 
-    const result = await fetchApi<Array<{
-      id: number;
-      title: string;
-      slug: string;
-      content: string;
-      categoryId: number;
-      category: {
-        id: number;
-        title: string;
-        slug: string;
-      };
-      createdAt: string;
-      updatedAt: string;
-    }>>(`/knowledge/documents?${params.toString()}`, {
-      next: {
-        revalidate: 60, // Revalidate every minute
+    const result = await fetchApi<PaginatedDocumentsResponse>(
+      `/knowledge/documents?${params.toString()}`,
+      {
+        next: {
+          revalidate: 60, // Revalidate every minute
+        },
+      }
+    );
+
+    // Ensure we return valid paginated response
+    if (result && result.data && result.pagination) {
+      return result;
+    }
+
+    // Fallback for backward compatibility or API errors
+    return {
+      data: Array.isArray(result) ? result : [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: Array.isArray(result) ? result.length : 0,
+        totalPages: 1,
+        hasMore: false,
       },
-    });
-    // Ensure we return an array
-    return Array.isArray(result) ? result : [];
+    };
   } catch (error) {
-    // Return empty array if API is unavailable
-    // Errors are handled gracefully by Next.js during build
-    return [];
+    // Return empty paginated response if API is unavailable
+    return {
+      data: [],
+      pagination: {
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasMore: false,
+      },
+    };
   }
 }
 

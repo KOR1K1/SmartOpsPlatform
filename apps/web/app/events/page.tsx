@@ -49,10 +49,10 @@ export default function EventsPage() {
         const limit = searchQuery 
           ? (isNumericSearch ? 500 : 200) // Search more for numeric queries
           : (selectedType ? 100 : ITEMS_PER_PAGE);
-        const fetchedEvents = await fetchEventsClient(limit, 0, searchQuery.trim() || undefined, selectedType || undefined);
-        setEvents(Array.isArray(fetchedEvents) ? fetchedEvents : []);
+        const response = await fetchEventsClient(limit, 0, searchQuery.trim() || undefined, selectedType || undefined);
+        setEvents(response.data || []);
         // Only show "Load More" when no filters/search are active
-        setHasMore(fetchedEvents.length === limit && !searchQuery && !selectedType);
+        setHasMore(response.pagination?.hasMore ?? false);
       } catch (error) {
         setEvents([]);
         setHasMore(false);
@@ -68,17 +68,17 @@ export default function EventsPage() {
     
     try {
       setLoadingMore(true);
-      const fetchedEvents = await fetchEventsClient(
+      const response = await fetchEventsClient(
         ITEMS_PER_PAGE,
         events.length,
         searchQuery.trim() || undefined,
         selectedType || undefined
       );
-      if (fetchedEvents.length === 0) {
+      if (response.data.length === 0) {
         setHasMore(false);
       } else {
-        setEvents((prev) => [...prev, ...fetchedEvents]);
-        setHasMore(fetchedEvents.length === ITEMS_PER_PAGE);
+        setEvents((prev) => [...prev, ...response.data]);
+        setHasMore(response.pagination?.hasMore ?? false);
       }
     } catch (error) {
       setHasMore(false);

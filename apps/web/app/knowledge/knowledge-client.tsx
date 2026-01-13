@@ -54,15 +54,15 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
         setLoading(true);
         // Use larger limit when searching to find more results
         const limit = searchQuery ? 150 : ITEMS_PER_PAGE;
-        const fetchedDocs = await fetchKnowledgeDocuments(
+        const response = await fetchKnowledgeDocuments(
           limit,
           0,
           selectedCategoryId,
           searchQuery.trim() || undefined
         );
-        setDocuments(Array.isArray(fetchedDocs) ? fetchedDocs : []);
+        setDocuments(response.data || []);
         // Show "Load More" when we got full page and no search is active
-        setHasMore(fetchedDocs.length === limit && !searchQuery);
+        setHasMore(response.pagination?.hasMore ?? false);
       } catch (error) {
         setDocuments([]);
         setHasMore(false);
@@ -78,17 +78,17 @@ export function KnowledgeClient({ initialCategories }: KnowledgeClientProps) {
     
     try {
       setLoadingMore(true);
-      const fetchedDocs = await fetchKnowledgeDocuments(
+      const response = await fetchKnowledgeDocuments(
         ITEMS_PER_PAGE,
         documents.length,
         selectedCategoryId,
         searchQuery.trim() || undefined
       );
-      if (fetchedDocs.length === 0) {
+      if (response.data.length === 0) {
         setHasMore(false);
       } else {
-        setDocuments((prev) => [...prev, ...fetchedDocs]);
-        setHasMore(fetchedDocs.length === ITEMS_PER_PAGE);
+        setDocuments((prev) => [...prev, ...response.data]);
+        setHasMore(response.pagination?.hasMore ?? false);
       }
     } catch (error) {
       setHasMore(false);

@@ -1,9 +1,10 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
-import { TaskEventWhereInput, SystemEventMetadata } from "../common/types";
+import { TaskEventWhereInput, SystemEventMetadata, PaginatedResponse } from "../common/types";
 import { validatePagination, validateSearchQuery, validateStringLength } from "../common/utils/validation.utils";
 import { sanitizeSearchQuery, sanitizeString } from "../common/utils/sanitize.util";
+import { createPaginatedResponse } from "../common/utils/pagination.util";
 
 @Injectable()
 export class EventsService {
@@ -12,7 +13,12 @@ export class EventsService {
     @Inject(AppLogger) private readonly logger: AppLogger
   ) {}
 
-  async getTaskEvents(limit = 50, offset = 0, q?: string, type?: string) {
+  async getTaskEvents(
+    limit = 50,
+    offset = 0,
+    q?: string,
+    type?: string
+  ): Promise<PaginatedResponse<any>> {
     // Validate and sanitize inputs using centralized utilities
     validatePagination({ limit, offset, maxLimit: 500, minLimit: 1 });
     validateSearchQuery({ query: q, maxLength: 200 });
@@ -67,37 +73,57 @@ export class EventsService {
       }
     }
 
-    return this.prisma.taskEvent.findMany({
-      where: filters,
-      include: {
-        task: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
+    // Get total count and data in parallel for better performance
+    const [data, total] = await Promise.all([
+      this.prisma.taskEvent.findMany({
+        where: filters,
+        include: {
+          task: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
-    });
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.taskEvent.count({ where: filters }),
+    ]);
+
+    return createPaginatedResponse(data, total, limit, offset);
   }
 
-  async getSystemEvents(limit = 50, offset = 0) {
-    return this.prisma.systemEvent.findMany({
-      where: { deletedAt: null },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
-    });
+  async getSystemEvents(
+    limit = 50,
+    offset = 0
+  ): Promise<PaginatedResponse<any>> {
+    // Validate pagination
+    validatePagination({ limit, offset, maxLimit: 500, minLimit: 1 });
+
+    const filters = { deletedAt: null };
+
+    // Get total count and data in parallel for better performance
+    const [data, total] = await Promise.all([
+      this.prisma.systemEvent.findMany({
+        where: filters,
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.systemEvent.count({ where: filters }),
+    ]);
+
+    return createPaginatedResponse(data, total, limit, offset);
   }
 
   async createSystemEvent(type: string, message: string, metadata?: SystemEventMetadata) {

@@ -1,10 +1,11 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AppLogger } from "../common/logger/logger.service";
-import { KnowledgeDocumentWhereInput } from "../common/types";
+import { KnowledgeDocumentWhereInput, PaginatedResponse } from "../common/types";
 import { validatePagination, validateSearchQuery } from "../common/utils/validation.utils";
 import { EntityNotFoundException } from "../common/exceptions/not-found.exception";
 import { sanitizeSearchQuery } from "../common/utils/sanitize.util";
+import { createPaginatedResponse } from "../common/utils/pagination.util";
 
 @Injectable()
 export class KnowledgeService {
@@ -28,7 +29,12 @@ export class KnowledgeService {
     });
   }
 
-  async getDocuments(categoryId?: number, limit = 50, offset = 0, q?: string) {
+  async getDocuments(
+    categoryId?: number,
+    limit = 50,
+    offset = 0,
+    q?: string
+  ): Promise<PaginatedResponse<any>> {
     // Validate and sanitize inputs using centralized utilities
     validatePagination({ limit, offset, maxLimit: 500, minLimit: 1 });
     validateSearchQuery({ query: q, maxLength: 200 });
@@ -78,28 +84,34 @@ export class KnowledgeService {
       }
     }
 
-    return this.prisma.knowledgeDocument.findMany({
-      where: filters,
-      include: {
-        category: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
+    // Get total count and data in parallel for better performance
+    const [data, total] = await Promise.all([
+      this.prisma.knowledgeDocument.findMany({
+        where: filters,
+        include: {
+          category: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+            },
           },
-        },
-        _count: {
-          select: {
-            versions: {
-              where: { deletedAt: null },
+          _count: {
+            select: {
+              versions: {
+                where: { deletedAt: null },
+              },
             },
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
-    });
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      this.prisma.knowledgeDocument.count({ where: filters }),
+    ]);
+
+    return createPaginatedResponse(data, total, limit, offset);
   }
 
   async getDocumentById(id: number) {
