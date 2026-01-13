@@ -8,11 +8,42 @@ const protectedRoutes = ["/dashboard", "/events", "/knowledge", "/profile"];
 // Public auth routes (redirect to dashboard if already authenticated)
 const publicAuthRoutes = ["/login", "/register"];
 
-// JWT secret (should match backend JWT_SECRET)
-// Note: In production, this should be set via environment variable
-// For now, using a default that should match backend during development
+/**
+ * Get JWT secret from environment variable
+ * CRITICAL: Never use fallback values or NEXT_PUBLIC_* for secrets
+ * JWT_SECRET must be set in environment variables
+ * 
+ * @throws Error if JWT_SECRET is not set
+ */
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET || process.env.NEXT_PUBLIC_JWT_SECRET || "your-secret-key-change-in-production";
+  const secret = process.env.JWT_SECRET;
+  
+  if (!secret) {
+    // Fail fast with clear error message
+    throw new Error(
+      "JWT_SECRET environment variable is required. " +
+      "Please set it in your .env file or environment variables. " +
+      "This is a critical security requirement."
+    );
+  }
+  
+  // Validate secret is not empty
+  if (secret.trim().length === 0) {
+    throw new Error(
+      "JWT_SECRET cannot be empty. Please provide a valid secret."
+    );
+  }
+  
+  // Warn if using default/weak secret (but don't fail in development)
+  if (process.env.NODE_ENV === "production" && 
+      (secret === "your-secret-key-change-in-production" || 
+       secret.length < 32)) {
+    console.error(
+      "⚠️  SECURITY WARNING: JWT_SECRET appears to be weak or default. " +
+      "Please use a strong, randomly generated secret (minimum 32 characters)."
+    );
+  }
+  
   return new TextEncoder().encode(secret);
 }
 
