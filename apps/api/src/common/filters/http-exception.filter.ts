@@ -20,6 +20,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    // Handle payload too large errors from body parser (413)
+    if (exception && typeof exception === "object" && "type" in exception) {
+      const err = exception as { type?: string; status?: number; message?: string };
+      if (err.type === "entity.too.large" || err.status === 413) {
+        return response.status(413).json({
+          statusCode: 413,
+          timestamp: new Date().toISOString(),
+          path: request.url,
+          message: "Payload too large. Request body exceeds the maximum allowed size.",
+          requestId: getRequestId() || (request as any).requestId,
+        });
+      }
+    }
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()

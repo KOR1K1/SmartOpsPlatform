@@ -165,7 +165,7 @@ docker compose up --build
 ```
 
 **That's it!** The database will be automatically initialized with:
-- Schema migrations
+- Schema migrations (see [Migrations Guide](./migrations.md) for details)
 - Initial roles (Admin, Manager, User)
 - Seed data (100+ users, 5k+ tasks, 30k+ events, 100+ documents)
 

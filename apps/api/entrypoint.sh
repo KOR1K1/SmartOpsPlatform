@@ -11,9 +11,20 @@ done
 
 echo "✅ Database is ready"
 
-# Push schema to database (creates tables if they don't exist)
-echo "📦 Pushing Prisma schema to database..."
-npx prisma db push --url="$DATABASE_URL" --accept-data-loss
+# Apply database migrations
+echo "📦 Applying database migrations..."
+if npx prisma migrate deploy --url="$DATABASE_URL" 2>/dev/null; then
+  echo "✅ Migrations applied successfully"
+else
+  echo "⚠️ No migrations found or migration failed."
+  echo "   For first-time setup, use 'prisma db push' or create initial migration:"
+  echo "   npx prisma migrate dev --name init"
+  echo "   Falling back to db push for initial setup..."
+  npx prisma db push --url="$DATABASE_URL" --accept-data-loss || {
+    echo "❌ Database setup failed"
+    exit 1
+  }
+fi
 
 # Seed initial roles
 echo "🌱 Seeding initial roles..."

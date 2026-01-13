@@ -3,15 +3,32 @@ import { AppModule } from "./app.module";
 import { env } from "./config/env";
 import { ValidationPipe } from "@nestjs/common";
 import { AppLogger } from "./common/logger/logger.service";
+import * as express from "express";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: false, // Disable default NestJS logger, use our custom logger
+    bodyParser: true, // Enable body parser with custom limits
   });
 
   // Get logger instance
   const logger = app.get(AppLogger);
   app.useLogger(logger);
+
+  // Configure body parser limits for DoS protection
+  // Limits request body size to prevent memory exhaustion and DoS attacks
+  app.use(express.json({ 
+    limit: env.bodyParserJsonLimit,
+    strict: true, // Only parse objects and arrays (RFC 7159)
+  }));
+  
+  app.use(express.urlencoded({ 
+    limit: env.bodyParserUrlencodedLimit,
+    extended: true, // Use qs library for parsing (supports nested objects)
+    parameterLimit: 1000, // Limit number of parameters to prevent DoS
+  }));
+
+  logger.log(`📦 Body parser limits: JSON=${env.bodyParserJsonLimit}, URL-encoded=${env.bodyParserUrlencodedLimit}`, "Bootstrap");
 
   // CORS configuration
   // Allow requests from both localhost (browser) and container network (internal)
